@@ -1,6 +1,6 @@
 ﻿using System;
-using System.IO;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -12,12 +12,15 @@ namespace MiscToolsForMD
         string Author { get; }
         string Id { get; }
         int Priority { get; }
+
         List<Lyric> GetLyrics(string title, string artist);
     }
+
     public class Lyric
     {
         public string content;
         public double tick;
+
         public static Lyric GetLyricByTick(List<Lyric> lst, double tick)
         {
             foreach (Lyric lyric in lst)
@@ -30,12 +33,14 @@ namespace MiscToolsForMD
             return new Lyric() { tick = tick, content = "No Lyric" };
         }
     }
+
     public class LocalSource : LyricSource
     {
         public string Name => "local";
         public string Author => "zhanghua000";
         public string Id => Author.ToLower() + "." + Name.ToLower();
         public int Priority => 0;
+
         public List<Lyric> GetLyrics(string title, string artist)
         {
             double offset = 0.0;
@@ -77,8 +82,8 @@ namespace MiscToolsForMD
                                 }
                             }
                             catch
-                            { 
-                                continue; 
+                            {
+                                continue;
                             }
                         }
                     }

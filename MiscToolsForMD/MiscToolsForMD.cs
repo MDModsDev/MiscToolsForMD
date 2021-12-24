@@ -2,13 +2,13 @@
 using Assets.Scripts.GameCore.HostComponent;
 using Assets.Scripts.PeroTools.Commons;
 using Assets.Scripts.PeroTools.Managers;
-using PeroPeroGames.GlobalDefines;
 using HarmonyLib;
 using ModHelper;
 using Newtonsoft.Json;
+using PeroPeroGames.GlobalDefines;
 using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
@@ -23,6 +23,7 @@ namespace MiscToolsForMD
         public static Config config;
         public static MiscToolsForMD instance;
         public static Indicator indicator;
+
         public void DoPatching()
         {
             if (System.IO.File.Exists("Mods" + System.IO.Path.DirectorySeparatorChar + Name + ".json"))
@@ -61,6 +62,7 @@ namespace MiscToolsForMD
             instance = this;
             ModLogger.Debug("MiscToolsForMD Loads Completed.");
         }
+
         private static void SetPlayResult(int idx, byte result, bool isMulStart)
         {
             Log("Note " + idx + " with result " + result + " and mul start: " + isMulStart + " was captured.");
@@ -80,6 +82,7 @@ namespace MiscToolsForMD
                 }
             }
         }
+
         private static void InitUI()
         {
             GameObject ui = GameObject.Find("MiscToolsUI");
@@ -95,6 +98,7 @@ namespace MiscToolsForMD
             indicator = ui.AddComponent(typeof(Indicator)) as Indicator;
             Log("Created UI");
         }
+
         public static List<string> GetControlKeys()
         {
             List<string> keys = new List<string>();
@@ -108,18 +112,18 @@ namespace MiscToolsForMD
                 text = "{\"Keylist\":{ \"Custom\":[{\"Key\":\"None\",\"Type\":\"BattleAir\"},{\"Key\":\"None\",\"Type\":\"BattleAir\"},{\"Key\":\"None\",\"Type\":\"BattleAir\"},{\"Key\":\"None\",\"Type\":\"BattleAir\"},{\"Key\":\"None\",\"Type\":\"BattleGround\"},{\"Key\":\"None\",\"Type\":\"BattleGround\"},{\"Key\":\"None\",\"Type\":\"BattleGround\"},{\"Key\":\"None\",\"Type\":\"BattleGround\"}]},\"IsChanged\":\"false\",\"KeyBoardProposal\":\"Default\",\"HandleProposal\":\"Default\",\"IsVibration\":\"true\",\"FeverKey\":\"Space\"}";
             }
             KeyConfigObj keyConfig = JsonConvert.DeserializeObject<KeyConfigObj>(text);
-            foreach(KeyObj key in keyConfig.KeyList.Custom)
+            foreach (KeyObj key in keyConfig.KeyList.Custom)
             {
                 if (key.Key != "None")
                 {
                     keys.Add(key.Key);
                 }
             }
-            keys.Insert(keys.Count/2,keyConfig.FeverKey);
+            keys.Insert(keys.Count / 2, keyConfig.FeverKey);
             return keys;
-
         }
-        private void TryPatch(Harmony harmony, MethodInfo orig, HarmonyMethod prefix=null, HarmonyMethod postfix=null, HarmonyMethod transpiler=null, HarmonyMethod finalizer=null)
+
+        private void TryPatch(Harmony harmony, MethodInfo orig, HarmonyMethod prefix = null, HarmonyMethod postfix = null, HarmonyMethod transpiler = null, HarmonyMethod finalizer = null)
         {
             List<HarmonyMethod> methods = new List<HarmonyMethod>() { prefix, postfix, transpiler, finalizer };
             if (methods.All(method => method is null) || methods.Count == 0)
@@ -129,11 +133,12 @@ namespace MiscToolsForMD
             }
             else
             {
-                harmony.Patch(orig,prefix,postfix,transpiler,finalizer);
+                harmony.Patch(orig, prefix, postfix, transpiler, finalizer);
                 Log("Patched method " + orig.ReflectedType.FullName + "." + orig.Name);
             }
         }
-        public static void Log(object log, object normal_log=null)
+
+        public static void Log(object log, object normal_log = null)
         {
             if (config.debug)
             {
@@ -144,11 +149,13 @@ namespace MiscToolsForMD
                 ModLogger.Debug(normal_log);
             }
         }
+
         public void SaveConfig()
         {
             System.IO.File.WriteAllText("Mods" + System.IO.Path.DirectorySeparatorChar + Name + ".json", JsonConvert.SerializeObject(config, Formatting.Indented));
         }
     }
+
     public class Config
     {
         public bool ap_indicator = true;
@@ -159,8 +166,8 @@ namespace MiscToolsForMD
         public int height = 100;
         public int x = 710;
         public int y = 20;
-
     }
+
     public class KeyConfigObj
     {
         public KeyListObj KeyList;
@@ -170,22 +177,26 @@ namespace MiscToolsForMD
         public string IsVibration;
         public string FeverKey;
     }
+
     public class KeyObj
     {
         public string Key;
         public string Type;
     }
+
     public class KeyListObj
     {
         public List<KeyObj> Custom;
     }
+
     public class Indicator : MonoBehaviour
     {
         private Rect windowRect = new Rect(MiscToolsForMD.config.x, MiscToolsForMD.config.y, MiscToolsForMD.config.width, MiscToolsForMD.config.height);
         private string accuracyText;
         private List<string> workingKeys;
-        private Dictionary<string,uint> counters;
-        private readonly Dictionary<string,string> keyDisplayNames = new Dictionary<string, string>()
+        private Dictionary<string, uint> counters;
+
+        private readonly Dictionary<string, string> keyDisplayNames = new Dictionary<string, string>()
         {
             {"Backspace", "←"}, {"Delete", "Del"}, {"Tab", "Tab"}, {"Return", "↲"}, {"Escape", "Esc"}, {"Keypad0", "0"}, {"Keypad1", "1"}, {"Keypad2", "2"},
             {"Keypad3", "3"}, {"Keypad4", "4"}, {"Keypad5", "5"}, {"Keypad6", "6"}, {"Keypad7", "7"}, {"Keypad8", "8"}, {"Keypad9", "9"}, {"KeypadPeriod", "."},
@@ -195,11 +206,13 @@ namespace MiscToolsForMD
             {"Alpha9", "9"}, {"Exclaim", "!"}, {"DoubbleQuote", "\""}, {"Hash", "#"}, {"Dollar", "$"}, {"Percent", "%"}, {"Ampersand", "&"}, {"Quote", "'"},
             {"LeftParen", "("}, {"RightParen", ")"}, {"Asterisk", "*"},{"Plus", "+"}, {"Comma", ","}, {"Minus", "-"}, {"Period", "."}, {"Slash", "/"},{"Colon", ":"},
             {"Semicolon", ";"}, {"Less", "<"}, {"Equals", "="}, {"Greater", ">"}, {"Question", "?"}, {"At", "@"}, {"LeftBracket", "["}, {"RightBracket", "]"},
-            {"Backslash", "\\"}, {"Caret", "^"}, {"Underscore", "_"}, {"BackQuote", "`"}, {"LeftCurlyBracket", "{"}, {"RightCurlyBracket", "}"}, {"Pipe", "|"}, 
+            {"Backslash", "\\"}, {"Caret", "^"}, {"Underscore", "_"}, {"BackQuote", "`"}, {"LeftCurlyBracket", "{"}, {"RightCurlyBracket", "}"}, {"Pipe", "|"},
             {"Tilde", "~"}
         };
+
         private int actualWeight = 0;
         private int targetWeight = 0;
+
         public void OnGUI()
         {
             if (MiscToolsForMD.config.ap_indicator || MiscToolsForMD.config.key_indicator)
@@ -207,11 +220,12 @@ namespace MiscToolsForMD
                 windowRect = GUILayout.Window(0, windowRect, IndicatorWindow, "MiscToolsUI");
             }
         }
+
         public void Start()
         {
             workingKeys = MiscToolsForMD.GetControlKeys();
             accuracyText = "Accuracy: " + 1.ToString("P");
-            counters = new Dictionary<string,uint>();
+            counters = new Dictionary<string, uint>();
             if (workingKeys.Count >= 3 && workingKeys.Count <= 9)
             {
                 foreach (string key in workingKeys)
@@ -232,6 +246,7 @@ namespace MiscToolsForMD
             actualWeight = 0;
             targetWeight = 0;
         }
+
         public void Update()
         {
             foreach (string key in workingKeys)
@@ -242,10 +257,12 @@ namespace MiscToolsForMD
                 }
             }
         }
+
         public void OnDestroy()
         {
             MiscToolsForMD.indicator = null;
         }
+
         public void IndicatorWindow(int windowID)
         {
             GUILayout.BeginVertical();
@@ -271,7 +288,7 @@ namespace MiscToolsForMD
                             fontSize = 24
                         };
                         string keyDisplayName;
-                        if (keyDisplayNames.ContainsKey(key)) 
+                        if (keyDisplayNames.ContainsKey(key))
                         {
                             keyDisplayName = keyDisplayNames[key];
                         }
@@ -286,6 +303,7 @@ namespace MiscToolsForMD
             }
             GUILayout.EndVertical();
         }
+
         public void SetAccuracy(int idx, byte result, bool isMulStart)
         {
             // See https://zh.moegirl.org.cn/Muse_Dash#%E5%87%86%E7%A1%AE%E7%8E%87 for more info
@@ -294,9 +312,9 @@ namespace MiscToolsForMD
             GameLogic.MusicData musicData = Singleton<FormulaBase.StageBattleComponent>.instance.GetMusicDataByIdx(idx);
             MiscToolsForMD.Log("Music data info: isLongPressing: " + musicData.isLongPressing + "; doubleIdx: " + musicData.doubleIdx + "; isDouble: " +
                 musicData.isDouble + "; isLongPressEnd: " + musicData.isLongPressEnd + "; isLongPressStart: " + musicData.isLongPressStart);
-            MiscToolsForMD.Log("Note data info: id: " + musicData.noteData.id + "; type: " + musicData.noteData.type + "; damage: " + musicData.noteData.damage + 
-                "; pathway: " + musicData.noteData.pathway + "; speed: " + musicData.noteData.speed + "; score: " + musicData.noteData.score + "; missCombo: " + 
-                musicData.noteData.missCombo + "; addCombo: " + musicData.noteData.addCombo + "; jumpNote: " + musicData.noteData.jumpNote + "; isShowPlayEffect: "+
+            MiscToolsForMD.Log("Note data info: id: " + musicData.noteData.id + "; type: " + musicData.noteData.type + "; damage: " + musicData.noteData.damage +
+                "; pathway: " + musicData.noteData.pathway + "; speed: " + musicData.noteData.speed + "; score: " + musicData.noteData.score + "; missCombo: " +
+                musicData.noteData.missCombo + "; addCombo: " + musicData.noteData.addCombo + "; jumpNote: " + musicData.noteData.jumpNote + "; isShowPlayEffect: " +
                 musicData.noteData.isShowPlayEffect);
             if (!musicData.isLongPressing && !isMulStart)
             {
@@ -385,7 +403,7 @@ namespace MiscToolsForMD
                     float trueAcc = actualWeight * 1.0f / targetWeight;
                     float acc = Mathf.RoundToInt(trueAcc / unit) * unit;
                     // See Assets.Scripts.GameCore.HostComponent.TaskStageTarget.GetAccuracy
-                    if (trueAcc < acc &&(acc==0.6f || acc==0.7f || acc==0.8f || acc==0.9f || acc == 1.0f))
+                    if (trueAcc < acc && (acc == 0.6f || acc == 0.7f || acc == 0.8f || acc == 0.9f || acc == 1.0f))
                     {
                         acc -= unit;
                     }
@@ -394,6 +412,7 @@ namespace MiscToolsForMD
                 }
             }
         }
+
         private void AddKeyCount(string actKey, uint num = 1)
         {
             foreach (string workingKey in workingKeys)
@@ -406,6 +425,7 @@ namespace MiscToolsForMD
                 }
             }
         }
+
         private KeyCode GetKeyCodeByName(string name)
         {
             foreach (KeyCode code in Enum.GetValues(typeof(KeyCode)))
