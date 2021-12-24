@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 
 namespace MiscToolsForMD
 {
-    public interface LyricSource
+    public interface ILyricSource
     {
         string Name { get; }
         string Author { get; }
@@ -34,7 +34,7 @@ namespace MiscToolsForMD
         }
     }
 
-    public class LocalSource : LyricSource
+    public class LocalSource : ILyricSource
     {
         public string Name => "local";
         public string Author => "zhanghua000";
