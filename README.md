@@ -18,7 +18,7 @@ Install mod loader from [here](https://github.com/mo10/MuseDashModLoader), insta
 
 ## How to get binary
 
-You can clone this repo, open in Visual Studio and recover the project. Some libraries is nuget package and you can recover normally, other libraries are in `%Game Folder%\MuseDash_Data\Managed`. After recovering project successfully, you can build it and get `MiscToolsForMD.dll` at `%Repo Folder%\MiscToolsForMD\bin\%Build Type%\`
+You can clone this repo, open in Visual Studio and recover the project. Some libraries is nuget package and you can recover normally, other libraries are in `%Game Folder%\MuseDash_Data\Managed`. Also, you can get `ModHelper` in ModLoader's source code . After recovering project successfully, you can build it and get `MiscToolsForMD.dll` at `%Repo Folder%\MiscToolsForMD\bin\%Build Type%\`
 
 ## Contributing
 
