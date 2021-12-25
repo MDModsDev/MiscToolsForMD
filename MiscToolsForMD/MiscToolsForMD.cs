@@ -1,12 +1,11 @@
-﻿using Assets.Scripts.GameCore.GamePlay;
+﻿using Assets.Scripts.Database;
+using Assets.Scripts.GameCore.GamePlay;
 using Assets.Scripts.GameCore.HostComponent;
 using Assets.Scripts.PeroTools.Commons;
 using Assets.Scripts.PeroTools.Managers;
-using Assets.Scripts.Database;
 using HarmonyLib;
 using ModHelper;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using PeroPeroGames.GlobalDefines;
 using System;
 using System.Collections.Generic;
@@ -209,6 +208,7 @@ namespace MiscToolsForMD
         private List<string> workingKeys;
         private Dictionary<string, uint> counters;
         private Rect lyricWindowRect = new Rect(MiscToolsForMD.config.lyric_x, MiscToolsForMD.config.lyric_y, MiscToolsForMD.config.lyric_width, MiscToolsForMD.config.lyric_height);
+
         private readonly Dictionary<string, string> keyDisplayNames = new Dictionary<string, string>()
         {
             {"Backspace", "←"}, {"Delete", "Del"}, {"Tab", "Tab"}, {"Return", "↲"}, {"Escape", "Esc"}, {"Keypad0", "0"}, {"Keypad1", "1"}, {"Keypad2", "2"},
@@ -222,6 +222,7 @@ namespace MiscToolsForMD
             {"Backslash", "\\"}, {"Caret", "^"}, {"Underscore", "_"}, {"BackQuote", "`"}, {"LeftCurlyBracket", "{"}, {"RightCurlyBracket", "}"}, {"Pipe", "|"},
             {"Tilde", "~"}
         };
+
         private int actualWeight = 0;
         private int targetWeight = 0;
         private List<Lyric> lyrics;
@@ -290,7 +291,7 @@ namespace MiscToolsForMD
                     musicName = Singleton<ConfigManager>.instance.GetConfigStringValue(DataHelper.selectedAlbumName, "uid", "name", DataHelper.selectedMusicUidFromInfoList);
                     musicAuthor = Singleton<ConfigManager>.instance.GetConfigStringValue(DataHelper.selectedAlbumName, "uid", "author", DataHelper.selectedMusicUidFromInfoList);
                 }
-                else if (DataHelper.collections.Count == 0||DataHelper.collections.Count < DataHelper.selectedMusicIndex)
+                else if (DataHelper.collections.Count == 0 || DataHelper.collections.Count < DataHelper.selectedMusicIndex)
                 {
                     musicName = "?????";
                     musicAuthor = "???";
@@ -315,7 +316,6 @@ namespace MiscToolsForMD
                     {
                         MiscToolsForMD.Log(ex.ToString(), "Failed to get lyric through source " + source.Name);
                     }
-
                 }
                 if (!successGetLyric || lyrics.Count == 0)
                 {
