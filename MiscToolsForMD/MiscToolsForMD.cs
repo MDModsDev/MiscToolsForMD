@@ -2,9 +2,11 @@
 using Assets.Scripts.GameCore.HostComponent;
 using Assets.Scripts.PeroTools.Commons;
 using Assets.Scripts.PeroTools.Managers;
+using Assets.Scripts.Database;
 using HarmonyLib;
 using ModHelper;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using PeroPeroGames.GlobalDefines;
 using System;
 using System.Collections.Generic;
@@ -20,6 +22,7 @@ namespace MiscToolsForMD
         public string Description => "Misc Tools for Muse Dash(Realtime accuracy indicator, key indicator...)";
         public string Author => "zhanghua000";
         public string HomePage => "https://github.com/zhanghua000/MiscToolsForMD";
+        public List<ILyricSource> lyricSources = new List<ILyricSource>();
         public static Config config;
         public static MiscToolsForMD instance;
         public static Indicator indicator;
@@ -58,6 +61,12 @@ namespace MiscToolsForMD
                 MethodInfo noteResult = typeof(BattleEnemyManager).GetMethod("SetPlayResult");
                 MethodInfo apPatch = typeof(MiscToolsForMD).GetMethod(nameof(SetPlayResult), BindingFlags.Static | BindingFlags.NonPublic);
                 TryPatch(harmony, noteResult, null, new HarmonyMethod(apPatch));
+            }
+            if (config.lyric)
+            {
+                lyricSources.Add(new LocalSource());
+                // TODO: Load other lyric source
+                lyricSources.OrderBy(lyricSource => lyricSource.Priority);
             }
             instance = this;
             ModLogger.Debug("MiscToolsForMD Loads Completed.");
@@ -164,8 +173,12 @@ namespace MiscToolsForMD
         public bool debug = false;
         public int width = 500;
         public int height = 100;
-        public int x = 710;
-        public int y = 20;
+        public int x = -1;
+        public int y = -1;
+        public int lyric_x = -1;
+        public int lyric_y = -1;
+        public int lyric_width = 500;
+        public int lyric_height = 100;
     }
 
     public class KeyConfigObj
@@ -192,10 +205,10 @@ namespace MiscToolsForMD
     public class Indicator : MonoBehaviour
     {
         private Rect windowRect = new Rect(MiscToolsForMD.config.x, MiscToolsForMD.config.y, MiscToolsForMD.config.width, MiscToolsForMD.config.height);
-        private string accuracyText;
+        private string accuracyText, lyricContent;
         private List<string> workingKeys;
         private Dictionary<string, uint> counters;
-
+        private Rect lyricWindowRect = new Rect(MiscToolsForMD.config.lyric_x, MiscToolsForMD.config.lyric_y, MiscToolsForMD.config.lyric_width, MiscToolsForMD.config.lyric_height);
         private readonly Dictionary<string, string> keyDisplayNames = new Dictionary<string, string>()
         {
             {"Backspace", "←"}, {"Delete", "Del"}, {"Tab", "Tab"}, {"Return", "↲"}, {"Escape", "Esc"}, {"Keypad0", "0"}, {"Keypad1", "1"}, {"Keypad2", "2"},
@@ -209,9 +222,9 @@ namespace MiscToolsForMD
             {"Backslash", "\\"}, {"Caret", "^"}, {"Underscore", "_"}, {"BackQuote", "`"}, {"LeftCurlyBracket", "{"}, {"RightCurlyBracket", "}"}, {"Pipe", "|"},
             {"Tilde", "~"}
         };
-
         private int actualWeight = 0;
         private int targetWeight = 0;
+        private List<Lyric> lyrics;
 
         public void OnGUI()
         {
@@ -219,42 +232,120 @@ namespace MiscToolsForMD
             {
                 windowRect = GUILayout.Window(0, windowRect, IndicatorWindow, "MiscToolsUI");
             }
+            if (MiscToolsForMD.config.lyric)
+            {
+                lyricWindowRect = GUILayout.Window(1, lyricWindowRect, LyricWindow, "Lyric");
+            }
         }
 
         public void Start()
         {
-            workingKeys = MiscToolsForMD.GetControlKeys();
-            accuracyText = "Accuracy: " + 1.ToString("P");
-            counters = new Dictionary<string, uint>();
-            if (workingKeys.Count >= 3 && workingKeys.Count <= 9)
+            bool needUpdateConfig = false;
+            if (MiscToolsForMD.config.ap_indicator || MiscToolsForMD.config.key_indicator)
             {
-                foreach (string key in workingKeys)
+                if (MiscToolsForMD.config.x == -1)
                 {
-                    counters.Add(key, 0);
+                    MiscToolsForMD.config.x = (Screen.width - MiscToolsForMD.config.width) / 2;
+                    needUpdateConfig = true;
                 }
+                if (MiscToolsForMD.config.y == -1)
+                {
+                    MiscToolsForMD.config.y = 20;
+                    needUpdateConfig |= true;
+                }
+                accuracyText = "Accuracy: " + 1.ToString("P");
+                workingKeys = MiscToolsForMD.GetControlKeys();
+                counters = new Dictionary<string, uint>();
+                if (workingKeys.Count >= 3 && workingKeys.Count <= 9)
+                {
+                    foreach (string key in workingKeys)
+                    {
+                        counters.Add(key, 0);
+                    }
+                }
+                else
+                {
+                    ModLogger.Debug("Unexcepted Keys List.");
+                }
+                windowRect = new Rect(MiscToolsForMD.config.x, MiscToolsForMD.config.y, MiscToolsForMD.config.width, MiscToolsForMD.config.height);
+                actualWeight = 0;
+                targetWeight = 0;
             }
-            else
+            if (MiscToolsForMD.config.lyric)
             {
-                ModLogger.Debug("Unexcepted Keys List.");
+                if (MiscToolsForMD.config.lyric_x == -1)
+                {
+                    MiscToolsForMD.config.lyric_x = (Screen.width - MiscToolsForMD.config.lyric_width) / 2;
+                    needUpdateConfig = true;
+                }
+                if (MiscToolsForMD.config.lyric_y == -1)
+                {
+                    MiscToolsForMD.config.lyric_y = Screen.height - MiscToolsForMD.config.lyric_height - 100;
+                    needUpdateConfig = true;
+                }
+                // See SetSelectedMusicNameTxt
+                string musicName, musicAuthor;
+                if (DataHelper.selectedAlbumUid != "collection" || DataHelper.selectedMusicIndex < 0)
+                {
+                    musicName = Singleton<ConfigManager>.instance.GetConfigStringValue(DataHelper.selectedAlbumName, "uid", "name", DataHelper.selectedMusicUidFromInfoList);
+                    musicAuthor = Singleton<ConfigManager>.instance.GetConfigStringValue(DataHelper.selectedAlbumName, "uid", "author", DataHelper.selectedMusicUidFromInfoList);
+                }
+                else if (DataHelper.collections.Count == 0||DataHelper.collections.Count < DataHelper.selectedMusicIndex)
+                {
+                    musicName = "?????";
+                    musicAuthor = "???";
+                }
+                else
+                {
+                    musicName = Singleton<ConfigManager>.instance.GetConfigStringValue(DataHelper.selectedAlbumName, "uid", "name", DataHelper.collections[DataHelper.selectedMusicIndex]);
+                    musicAuthor = Singleton<ConfigManager>.instance.GetConfigStringValue(DataHelper.selectedAlbumName, "uid", "author", DataHelper.collections[DataHelper.selectedMusicIndex]);
+                }
+
+                MiscToolsForMD.Log("Song name: " + musicName + "; author: " + musicAuthor);
+                bool successGetLyric = false;
+                foreach (ILyricSource source in MiscToolsForMD.instance.lyricSources)
+                {
+                    try
+                    {
+                        lyrics = source.GetLyrics(musicName, musicAuthor);
+                        successGetLyric = true;
+                        break;
+                    }
+                    catch (Exception ex)
+                    {
+                        MiscToolsForMD.Log(ex.ToString(), "Failed to get lyric through source " + source.Name);
+                    }
+
+                }
+                if (!successGetLyric || lyrics.Count == 0)
+                {
+                    MiscToolsForMD.Log("No available lyric.");
+                }
+                lyricWindowRect = new Rect(MiscToolsForMD.config.lyric_x, MiscToolsForMD.config.lyric_y, MiscToolsForMD.config.lyric_width, MiscToolsForMD.config.lyric_height);
+                lyricContent = "";
             }
-            if (Screen.width != 1920)
+            if (needUpdateConfig)
             {
-                MiscToolsForMD.config.y = (Screen.width - MiscToolsForMD.config.width) / 2;
                 MiscToolsForMD.instance.SaveConfig();
             }
-            windowRect = new Rect(MiscToolsForMD.config.x, MiscToolsForMD.config.y, MiscToolsForMD.config.width, MiscToolsForMD.config.height);
-            actualWeight = 0;
-            targetWeight = 0;
         }
 
         public void Update()
         {
-            foreach (string key in workingKeys)
+            if (MiscToolsForMD.config.key_indicator)
             {
-                if (Input.GetKeyDown(GetKeyCodeByName(key)))
+                foreach (string key in workingKeys)
                 {
-                    AddKeyCount(key);
+                    if (Input.GetKeyDown(GetKeyCodeByName(key)))
+                    {
+                        AddKeyCount(key);
+                    }
                 }
+            }
+            if (MiscToolsForMD.config.lyric)
+            {
+                float time = Singleton<FormulaBase.StageBattleComponent>.instance.timeFromMusicStart;
+                lyricContent = Lyric.GetLyricByTime(lyrics, time).content;
             }
         }
 
@@ -413,6 +504,18 @@ namespace MiscToolsForMD
             }
         }
 
+        public void LyricWindow(int windowId)
+        {
+            GUILayout.BeginVertical();
+            GUIStyle lyricStyle = new GUIStyle
+            {
+                alignment = TextAnchor.MiddleCenter,
+                fontSize = 48
+            };
+            GUILayout.Label(lyricContent, lyricStyle);
+            GUILayout.EndVertical();
+        }
+
         private void AddKeyCount(string actKey, uint num = 1)
         {
             foreach (string workingKey in workingKeys)
@@ -430,10 +533,8 @@ namespace MiscToolsForMD
         {
             foreach (KeyCode code in Enum.GetValues(typeof(KeyCode)))
             {
-                MiscToolsForMD.Log("Current key: " + code.ToString());
                 if (code.ToString() == name)
                 {
-                    MiscToolsForMD.Log("Get keycode: " + name);
                     return code;
                 }
             }
