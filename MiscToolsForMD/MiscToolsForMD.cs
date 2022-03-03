@@ -11,7 +11,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using UnhollowerBaseLib;
 using UnhollowerRuntimeLib;
 using UnityEngine;
 
@@ -36,6 +35,7 @@ namespace MiscToolsForMD
                 config = new Config();
                 SaveConfig();
             }
+            config.debug = config.debug || MelonDebug.IsEnabled();
             LoggerInstance.Msg("Debug mode:" + config.debug);
             if (config.ap_indicator || config.key_indicator || config.lyric)
             {
@@ -49,9 +49,10 @@ namespace MiscToolsForMD
             }
             if (config.ap_indicator)
             {
-                MethodInfo noteResult = typeof(BattleEnemyManager).GetMethod("SetPlayResult");
-                MethodInfo apPatch = typeof(MiscToolsForMDMod).GetMethod(nameof(SetPlayResult), BindingFlags.Static | BindingFlags.NonPublic);
-                HarmonyInstance.Patch(noteResult, null, new HarmonyMethod(apPatch));
+                MethodInfo addCount = typeof(TaskStageTarget).GetMethod("AddCount");
+                MethodInfo countPatch = typeof(MiscToolsForMDMod).GetMethod(nameof(AddCount), BindingFlags.Static | BindingFlags.NonPublic);
+                HarmonyInstance.Patch(addCount, null, new HarmonyMethod(countPatch));
+
             }
             if (config.lyric)
             {
@@ -63,24 +64,34 @@ namespace MiscToolsForMD
             LoggerInstance.Msg("MiscToolsForMD Loads Completed.");
         }
 
-        private static void SetPlayResult(int idx, byte result, bool isMulStart)
+        private static void AddCount(uint result,int value)
         {
-            instance.Log("Note " + idx + " with result " + result + " and mul start: " + isMulStart + " was captured.");
-            if (indicator == null)
+            if (value == 1)
             {
-                instance.Log("No UI instance");
-            }
-            else
-            {
-                try
+                indicator.targetWeight += 2;
+                if (result == (uint)TaskResult.Great)
                 {
-                    indicator.SetAccuracy(idx, result, isMulStart);
+                    indicator.actualWeight += 1;
                 }
-                catch (Exception e)
+                else if (result == (uint)TaskResult.Prefect)
                 {
-                    instance.Log(e.ToString(), "Failed to calculate accuracy, open debug mode for more info.");
+                    indicator.actualWeight += 2;
                 }
             }
+            else if (value == 2)
+            {
+                indicator.targetWeight += 4;
+                if (result == (uint)TaskResult.Great)
+                {
+                    indicator.actualWeight += 2;
+                }
+                else if (result == (uint)TaskResult.Prefect)
+                {
+                    indicator.actualWeight += 4;
+                }
+            }
+            indicator.UpdateAccuracy();
+            instance.Log("result:" + result + ";value:" + value + ";targetWeight:" + indicator.targetWeight + ";actualWeight:" + indicator.actualWeight);
         }
 
         private static void InitUI()
@@ -201,8 +212,8 @@ namespace MiscToolsForMD
             {"Tilde", "~"}
         };
 
-        private int actualWeight = 0;
-        private int targetWeight = 0;
+        public int actualWeight = 0;
+        public int targetWeight = 0;
         private List<Lyric> lyrics;
         public Indicator(IntPtr intPtr) : base(intPtr) { }
 
@@ -374,115 +385,6 @@ namespace MiscToolsForMD
             GUILayout.EndVertical();
         }
 
-        public void SetAccuracy(int idx, byte result, bool isMulStart)
-        {
-            // See https://zh.moegirl.org.cn/Muse_Dash#%E5%87%86%E7%A1%AE%E7%8E%87 for more info
-            // Also see:
-            // Assets.Scripts.GameCore.HostComponent.BattleEnemyManager.SetPlayResult
-            GameLogic.MusicData musicData = Singleton<FormulaBase.StageBattleComponent>.instance.GetMusicDataByIdx(idx);
-            MiscToolsForMDMod.instance.Log("Music data info: isLongPressing: " + musicData.isLongPressing + "; doubleIdx: " + musicData.doubleIdx + "; isDouble: " +
-                musicData.isDouble + "; isLongPressEnd: " + musicData.isLongPressEnd + "; isLongPressStart: " + musicData.isLongPressStart);
-            MiscToolsForMDMod.instance.Log("Note data info: id: " + musicData.noteData.id + "; type: " + musicData.noteData.type + "; damage: " + musicData.noteData.damage +
-                "; pathway: " + musicData.noteData.pathway + "; speed: " + musicData.noteData.speed + "; score: " + musicData.noteData.score + "; missCombo: " +
-                musicData.noteData.missCombo + "; addCombo: " + musicData.noteData.addCombo + "; jumpNote: " + musicData.noteData.jumpNote + "; isShowPlayEffect: " +
-                musicData.noteData.isShowPlayEffect);
-            if (!musicData.isLongPressing && !isMulStart)
-            {
-                if (musicData.noteData.addCombo)
-                {
-                    if (musicData.isDouble)
-                    {
-                        // Double-Press Notes
-                        byte doubleResult = Singleton<BattleEnemyManager>.instance.GetPlayResult(musicData.doubleIdx);
-                        if (doubleResult != (byte)TaskResult.None)
-                        {
-                            // If is TaskResult.None, maybe this note is Double-Start or haven't be recorded by Game.
-                            // The latter situation will result unavoidable deviation with game result because game will
-                            // check result after player finished stage, it will have all the results. Maybe someone
-                            // can help me fix this. The BPM is higher and the game is laggier, the problem is severer.
-                            targetWeight += 4;
-                            if (result == (int)TaskResult.Great && doubleResult == (int)TaskResult.Prefect)
-                            {
-                                actualWeight += 2;
-                            }
-                            else if (result == (int)TaskResult.Prefect && doubleResult == (int)TaskResult.Great)
-                            {
-                                actualWeight += 2;
-                            }
-                            else if (result == (int)TaskResult.Great && doubleResult == (int)TaskResult.Great)
-                            {
-                                actualWeight += 2;
-                            }
-                            else if (result == (int)TaskResult.Prefect && doubleResult == (int)TaskResult.Prefect)
-                            {
-                                actualWeight += 4;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        // Normal Notes
-                        targetWeight += 2;
-                        if (result == (int)TaskResult.Prefect)
-                        {
-                            actualWeight += 2;
-                        }
-                        else if (result == (int)TaskResult.Great)
-                        {
-                            actualWeight += 1;
-                        }
-                        MiscToolsForMDMod.instance.Log("Normal Note");
-                    }
-                }
-                else
-                {
-                    if (musicData.noteData.type == (uint)NoteType.Hp)
-                    {
-                        // Normal hearts
-                        targetWeight += 1;
-                        if (result == (int)TaskResult.Prefect)
-                        {
-                            actualWeight += 1;
-                        }
-                        MiscToolsForMDMod.instance.Log("Heart Note");
-                    }
-                    else if (musicData.noteData.type == (uint)NoteType.Music)
-                    {
-                        // Musics
-                        targetWeight += 1;
-                        if (result == (int)TaskResult.Prefect)
-                        {
-                            actualWeight += 1;
-                        }
-                        MiscToolsForMDMod.instance.Log("Music Note");
-                    }
-                    else
-                    {
-                        // Gears
-                        targetWeight += 2;
-                        if (result == (int)TaskResult.Prefect)
-                        {
-                            actualWeight += 2;
-                        }
-                        MiscToolsForMDMod.instance.Log("Gear Note");
-                    }
-                }
-                if (targetWeight > 0)
-                {
-                    float unit = 0.0001f;
-                    float trueAcc = actualWeight * 1.0f / targetWeight;
-                    float acc = Mathf.RoundToInt(trueAcc / unit) * unit;
-                    // See Assets.Scripts.GameCore.HostComponent.TaskStageTarget.GetAccuracy
-                    if (trueAcc < acc && (acc == 0.6f || acc == 0.7f || acc == 0.8f || acc == 0.9f || acc == 1.0f))
-                    {
-                        acc -= unit;
-                    }
-                    MiscToolsForMDMod.instance.Log("Result: " + result + "; current accuracy: " + acc + "; current weight: " + actualWeight + "; target weight: " + targetWeight);
-                    accuracyText = "Accuracy: " + acc.ToString("P");
-                }
-            }
-        }
-
         public void LyricWindow(int windowId)
         {
             GUIStyle lyricStyle = new GUIStyle
@@ -495,6 +397,21 @@ namespace MiscToolsForMD
             GUILayout.EndVertical();
         }
 
+        public void UpdateAccuracy()
+        {
+            if (targetWeight > 0)
+            {
+                float unit = 0.0001f;
+                float trueAcc = actualWeight * 1.0f / targetWeight;
+                float acc = Mathf.RoundToInt(trueAcc / unit) * unit;
+                // See Assets.Scripts.GameCore.HostComponent.TaskStageTarget.GetAccuracy
+                if (trueAcc < acc && (acc == 0.6f || acc == 0.7f || acc == 0.8f || acc == 0.9f || acc == 1.0f))
+                {
+                    acc -= unit;
+                }
+                accuracyText = "Accuracy: " + acc.ToString("P");
+            }
+        }
         private void AddKeyCount(string actKey, uint num = 1)
         {
             foreach (string workingKey in workingKeys)
