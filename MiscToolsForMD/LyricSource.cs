@@ -44,13 +44,13 @@ namespace MiscToolsForMD
         public List<Lyric> GetLyrics(string title, string artist)
         {
             float offset = 0.0f;
-            if (!Directory.Exists("Mods" + Path.DirectorySeparatorChar + "Lyrics"))
+            if (!Directory.Exists("UserData" + Path.DirectorySeparatorChar + "Lyrics"))
             {
-                Directory.CreateDirectory("Mods" + Path.DirectorySeparatorChar + "Lyrics");
+                Directory.CreateDirectory("UserData" + Path.DirectorySeparatorChar + "Lyrics");
             }
             List<Lyric> result = new List<Lyric>();
             string fileName = title + "-" + artist + ".lrc";
-            string filePath = "Mods" + Path.DirectorySeparatorChar + "Lyrics" + Path.DirectorySeparatorChar + fileName;
+            string filePath = "UserData" + Path.DirectorySeparatorChar + "Lyrics" + Path.DirectorySeparatorChar + fileName;
             if (File.Exists(filePath))
             {
                 string[] fileLines = File.ReadAllLines(filePath);

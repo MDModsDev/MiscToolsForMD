@@ -1,5 +1,9 @@
-﻿using System.Reflection;
+﻿using MelonLoader;
+using System.Reflection;
 using System.Runtime.InteropServices;
+
+[assembly:MelonInfo(typeof(MiscToolsForMD.MiscToolsForMDMod),"MiscToolsForMD","1.0.0.0","zhanghua000", "https://github.com/zhanghua000/MiscToolsForMD")]
+[assembly:MelonGame("PeroPeroGames","MuseDash")]
 
 // 有关程序集的一般信息由以下
 // 控制。更改这些特性值可修改

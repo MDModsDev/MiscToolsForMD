@@ -4,62 +4,54 @@ using Assets.Scripts.GameCore.HostComponent;
 using Assets.Scripts.PeroTools.Commons;
 using Assets.Scripts.PeroTools.Managers;
 using HarmonyLib;
-using ModHelper;
+using MelonLoader;
 using Newtonsoft.Json;
 using PeroPeroGames.GlobalDefines;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using UnhollowerBaseLib;
+using UnhollowerRuntimeLib;
 using UnityEngine;
 
 namespace MiscToolsForMD
 {
-    public class MiscToolsForMD : IMod
+    public class MiscToolsForMDMod : MelonMod
     {
-        public string Name => "MiscToolsForMD";
-        public string Description => "Misc Tools for Muse Dash(Realtime accuracy indicator, key indicator...)";
-        public string Author => "zhanghua000";
-        public string HomePage => "https://github.com/zhanghua000/MiscToolsForMD";
         public List<ILyricSource> lyricSources = new List<ILyricSource>();
         public static Config config;
-        public static MiscToolsForMD instance;
+        public static MiscToolsForMDMod instance;
         public static Indicator indicator;
+        public static string Name = "MiscToolsForMD";
 
-        public void DoPatching()
+        public override void OnApplicationLateStart()
         {
-            if (System.IO.File.Exists("Mods" + System.IO.Path.DirectorySeparatorChar + Name + ".json"))
+            if (System.IO.File.Exists("UserData" + System.IO.Path.DirectorySeparatorChar + Name + ".json"))
             {
-                config = JsonConvert.DeserializeObject<Config>(System.IO.File.ReadAllText("Mods" + System.IO.Path.DirectorySeparatorChar + Name + ".json"));
+                config = JsonConvert.DeserializeObject<Config>(System.IO.File.ReadAllText("UserData" + System.IO.Path.DirectorySeparatorChar + Name + ".json"));
             }
             else
             {
                 config = new Config();
                 SaveConfig();
             }
-            ModLogger.Debug("Debug mode:" + config.debug);
-            Harmony.DEBUG = config.debug;
-            Harmony harmony = new Harmony(string.Format("com.github.{0}.{1}", Author, Name.ToLower()));
-            ModLogger.Debug(string.Format("Harmony instance initialized with ID {0}.", harmony.Id));
-            if (Harmony.HasAnyPatches(harmony.Id))
-            {
-                ModLogger.Debug("Harmony instance has patches, this may result unexpected behaviors.");
-            }
+            LoggerInstance.Msg("Debug mode:" + config.debug);
             if (config.ap_indicator || config.key_indicator || config.lyric)
             {
                 MethodInfo start = typeof(GameOptimization).GetMethod("Init");
-                MethodInfo startPatch = typeof(MiscToolsForMD).GetMethod(nameof(InitUI), BindingFlags.Static | BindingFlags.NonPublic);
-                TryPatch(harmony, start, null, new HarmonyMethod(startPatch));
+                MethodInfo startPatch = typeof(MiscToolsForMDMod).GetMethod(nameof(InitUI), BindingFlags.Static | BindingFlags.NonPublic);
+                HarmonyInstance.Patch(start, null, new HarmonyMethod(startPatch));
             }
             else
             {
-                ModLogger.Debug("Nothing was applied.");
+                LoggerInstance.Msg("Nothing was applied.");
             }
             if (config.ap_indicator)
             {
                 MethodInfo noteResult = typeof(BattleEnemyManager).GetMethod("SetPlayResult");
-                MethodInfo apPatch = typeof(MiscToolsForMD).GetMethod(nameof(SetPlayResult), BindingFlags.Static | BindingFlags.NonPublic);
-                TryPatch(harmony, noteResult, null, new HarmonyMethod(apPatch));
+                MethodInfo apPatch = typeof(MiscToolsForMDMod).GetMethod(nameof(SetPlayResult), BindingFlags.Static | BindingFlags.NonPublic);
+                HarmonyInstance.Patch(noteResult, null, new HarmonyMethod(apPatch));
             }
             if (config.lyric)
             {
@@ -68,15 +60,15 @@ namespace MiscToolsForMD
                 lyricSources.OrderBy(lyricSource => lyricSource.Priority);
             }
             instance = this;
-            ModLogger.Debug("MiscToolsForMD Loads Completed.");
+            LoggerInstance.Msg("MiscToolsForMD Loads Completed.");
         }
 
         private static void SetPlayResult(int idx, byte result, bool isMulStart)
         {
-            Log("Note " + idx + " with result " + result + " and mul start: " + isMulStart + " was captured.");
+            instance.Log("Note " + idx + " with result " + result + " and mul start: " + isMulStart + " was captured.");
             if (indicator == null)
             {
-                Log("No UI instance");
+                instance.Log("No UI instance");
             }
             else
             {
@@ -86,25 +78,26 @@ namespace MiscToolsForMD
                 }
                 catch (Exception e)
                 {
-                    Log(e.ToString(), "Failed to calculate accuracy, open debug mode for more info.");
+                    instance.Log(e.ToString(), "Failed to calculate accuracy, open debug mode for more info.");
                 }
             }
         }
 
         private static void InitUI()
         {
+            ClassInjector.RegisterTypeInIl2Cpp<Indicator>();
             GameObject ui = GameObject.Find("MiscToolsUI");
             if (ui == null)
             {
                 ui = new GameObject("MiscToolsUI");
-                Log("Creating new GameObject");
+                instance.Log("Creating new GameObject");
             }
             else
             {
-                Log("Using existing GameObject");
+                instance.Log("Using existing GameObject");
             }
-            indicator = ui.AddComponent(typeof(Indicator)) as Indicator;
-            Log("Created UI");
+            indicator = ui.AddComponent<Indicator>();
+            instance.Log("Created UI");
         }
 
         public static List<string> GetControlKeys()
@@ -131,36 +124,21 @@ namespace MiscToolsForMD
             return keys;
         }
 
-        private void TryPatch(Harmony harmony, MethodInfo orig, HarmonyMethod prefix = null, HarmonyMethod postfix = null, HarmonyMethod transpiler = null, HarmonyMethod finalizer = null)
-        {
-            List<HarmonyMethod> methods = new List<HarmonyMethod>() { prefix, postfix, transpiler, finalizer };
-            if (methods.All(method => method is null) || methods.Count == 0)
-            {
-                Log("Failed to patch " + orig.ReflectedType.FullName + "." + orig.Name + " because all methods are empty.");
-                Log("Details: target: " + (orig is null) + "; prefix: " + (prefix is null) + "; postfix: " + (postfix is null) + "; transpiler: " + (transpiler is null) + "; finalizer: " + (finalizer is null));
-            }
-            else
-            {
-                harmony.Patch(orig, prefix, postfix, transpiler, finalizer);
-                Log("Patched method " + orig.ReflectedType.FullName + "." + orig.Name);
-            }
-        }
-
-        public static void Log(object log, object normal_log = null)
+        public void Log(object log, object normal_log = null)
         {
             if (config.debug)
             {
-                ModLogger.Debug(log);
+                LoggerInstance.Msg(log);
             }
             else if (normal_log != null)
             {
-                ModLogger.Debug(normal_log);
+                LoggerInstance.Msg(normal_log);
             }
         }
 
         public void SaveConfig()
         {
-            System.IO.File.WriteAllText("Mods" + System.IO.Path.DirectorySeparatorChar + Name + ".json", JsonConvert.SerializeObject(config, Formatting.Indented));
+            System.IO.File.WriteAllText("UserData" + System.IO.Path.DirectorySeparatorChar + Name + ".json", JsonConvert.SerializeObject(config, Formatting.Indented));
         }
     }
 
@@ -203,12 +181,12 @@ namespace MiscToolsForMD
 
     public class Indicator : MonoBehaviour
     {
-        private Rect windowRect = new Rect(MiscToolsForMD.config.x, MiscToolsForMD.config.y, MiscToolsForMD.config.width, MiscToolsForMD.config.height);
+        private Rect windowRect = new Rect(MiscToolsForMDMod.config.x, MiscToolsForMDMod.config.y, MiscToolsForMDMod.config.width, MiscToolsForMDMod.config.height);
         private string accuracyText, lyricContent;
         private List<string> workingKeys;
         private Dictionary<string, uint> counters;
-        private Rect lyricWindowRect = new Rect(MiscToolsForMD.config.lyric_x, MiscToolsForMD.config.lyric_y, MiscToolsForMD.config.lyric_width, MiscToolsForMD.config.lyric_height);
-
+        private Rect lyricWindowRect = new Rect(MiscToolsForMDMod.config.lyric_x, MiscToolsForMDMod.config.lyric_y, MiscToolsForMDMod.config.lyric_width, MiscToolsForMDMod.config.lyric_height);
+        
         private readonly Dictionary<string, string> keyDisplayNames = new Dictionary<string, string>()
         {
             {"Backspace", "←"}, {"Delete", "Del"}, {"Tab", "Tab"}, {"Return", "↲"}, {"Escape", "Esc"}, {"Keypad0", "0"}, {"Keypad1", "1"}, {"Keypad2", "2"},
@@ -226,36 +204,37 @@ namespace MiscToolsForMD
         private int actualWeight = 0;
         private int targetWeight = 0;
         private List<Lyric> lyrics;
+        public Indicator(IntPtr intPtr) : base(intPtr) { }
 
         public void OnGUI()
         {
-            if (MiscToolsForMD.config.ap_indicator || MiscToolsForMD.config.key_indicator)
+            if (MiscToolsForMDMod.config.ap_indicator || MiscToolsForMDMod.config.key_indicator)
             {
-                windowRect = GUILayout.Window(0, windowRect, IndicatorWindow, "MiscToolsUI");
+                windowRect = GUILayout.Window(0, windowRect, (GUI.WindowFunction)IndicatorWindow, "MiscToolsUI",null);
             }
-            if (MiscToolsForMD.config.lyric)
+            if (MiscToolsForMDMod.config.lyric)
             {
-                lyricWindowRect = GUILayout.Window(1, lyricWindowRect, LyricWindow, "Lyric");
+                lyricWindowRect = GUILayout.Window(1, lyricWindowRect, (GUI.WindowFunction)LyricWindow, "Lyric",null);
             }
         }
 
         public void Start()
         {
             bool needUpdateConfig = false;
-            if (MiscToolsForMD.config.ap_indicator || MiscToolsForMD.config.key_indicator)
+            if (MiscToolsForMDMod.config.ap_indicator || MiscToolsForMDMod.config.key_indicator)
             {
-                if (MiscToolsForMD.config.x == -1)
+                if (MiscToolsForMDMod.config.x == -1)
                 {
-                    MiscToolsForMD.config.x = (Screen.width - MiscToolsForMD.config.width) / 2;
+                    MiscToolsForMDMod.config.x = (Screen.width - MiscToolsForMDMod.config.width) / 2;
                     needUpdateConfig = true;
                 }
-                if (MiscToolsForMD.config.y == -1)
+                if (MiscToolsForMDMod.config.y == -1)
                 {
-                    MiscToolsForMD.config.y = 20;
+                    MiscToolsForMDMod.config.y = 20;
                     needUpdateConfig |= true;
                 }
                 accuracyText = "Accuracy: " + 1.ToString("P");
-                workingKeys = MiscToolsForMD.GetControlKeys();
+                workingKeys = MiscToolsForMDMod.GetControlKeys();
                 counters = new Dictionary<string, uint>();
                 if (workingKeys.Count >= 3 && workingKeys.Count <= 9)
                 {
@@ -266,22 +245,22 @@ namespace MiscToolsForMD
                 }
                 else
                 {
-                    ModLogger.Debug("Unexcepted Keys List.");
+                    MiscToolsForMDMod.instance.LoggerInstance.Msg("Unexcepted Keys List.");
                 }
-                windowRect = new Rect(MiscToolsForMD.config.x, MiscToolsForMD.config.y, MiscToolsForMD.config.width, MiscToolsForMD.config.height);
+                windowRect = new Rect(MiscToolsForMDMod.config.x, MiscToolsForMDMod.config.y, MiscToolsForMDMod.config.width, MiscToolsForMDMod.config.height);
                 actualWeight = 0;
                 targetWeight = 0;
             }
-            if (MiscToolsForMD.config.lyric)
+            if (MiscToolsForMDMod.config.lyric)
             {
-                if (MiscToolsForMD.config.lyric_x == -1)
+                if (MiscToolsForMDMod.config.lyric_x == -1)
                 {
-                    MiscToolsForMD.config.lyric_x = (Screen.width - MiscToolsForMD.config.lyric_width) / 2;
+                    MiscToolsForMDMod.config.lyric_x = (Screen.width - MiscToolsForMDMod.config.lyric_width) / 2;
                     needUpdateConfig = true;
                 }
-                if (MiscToolsForMD.config.lyric_y == -1)
+                if (MiscToolsForMDMod.config.lyric_y == -1)
                 {
-                    MiscToolsForMD.config.lyric_y = Screen.height - MiscToolsForMD.config.lyric_height - 100;
+                    MiscToolsForMDMod.config.lyric_y = Screen.height - MiscToolsForMDMod.config.lyric_height - 100;
                     needUpdateConfig = true;
                 }
                 // See SetSelectedMusicNameTxt
@@ -302,9 +281,9 @@ namespace MiscToolsForMD
                     musicAuthor = Singleton<ConfigManager>.instance.GetConfigStringValue(DataHelper.selectedAlbumName, "uid", "author", DataHelper.collections[DataHelper.selectedMusicIndex]);
                 }
 
-                MiscToolsForMD.Log("Song name: " + musicName + "; author: " + musicAuthor);
+                MiscToolsForMDMod.instance.Log("Song name: " + musicName + "; author: " + musicAuthor);
                 bool successGetLyric = false;
-                foreach (ILyricSource source in MiscToolsForMD.instance.lyricSources)
+                foreach (ILyricSource source in MiscToolsForMDMod.instance.lyricSources)
                 {
                     try
                     {
@@ -314,25 +293,25 @@ namespace MiscToolsForMD
                     }
                     catch (Exception ex)
                     {
-                        MiscToolsForMD.Log(ex.ToString(), "Failed to get lyric through source " + source.Name);
+                        MiscToolsForMDMod.instance.Log(ex.ToString(), "Failed to get lyric through source " + source.Name);
                     }
                 }
                 if (!successGetLyric || lyrics.Count == 0)
                 {
-                    MiscToolsForMD.Log("No available lyric.");
+                    MiscToolsForMDMod.instance.Log("No available lyric.");
                 }
-                lyricWindowRect = new Rect(MiscToolsForMD.config.lyric_x, MiscToolsForMD.config.lyric_y, MiscToolsForMD.config.lyric_width, MiscToolsForMD.config.lyric_height);
+                lyricWindowRect = new Rect(MiscToolsForMDMod.config.lyric_x, MiscToolsForMDMod.config.lyric_y, MiscToolsForMDMod.config.lyric_width, MiscToolsForMDMod.config.lyric_height);
                 lyricContent = "";
             }
             if (needUpdateConfig)
             {
-                MiscToolsForMD.instance.SaveConfig();
+                MiscToolsForMDMod.instance.SaveConfig();
             }
         }
 
         public void Update()
         {
-            if (MiscToolsForMD.config.key_indicator)
+            if (MiscToolsForMDMod.config.key_indicator)
             {
                 foreach (string key in workingKeys)
                 {
@@ -342,7 +321,7 @@ namespace MiscToolsForMD
                     }
                 }
             }
-            if (MiscToolsForMD.config.lyric)
+            if (MiscToolsForMDMod.config.lyric)
             {
                 float time = Singleton<FormulaBase.StageBattleComponent>.instance.timeFromMusicStart;
                 lyricContent = Lyric.GetLyricByTime(lyrics, time).content;
@@ -351,33 +330,23 @@ namespace MiscToolsForMD
 
         public void OnDestroy()
         {
-            MiscToolsForMD.indicator = null;
+            MiscToolsForMDMod.indicator = null;
         }
 
         public void IndicatorWindow(int windowID)
         {
-            GUILayout.BeginVertical();
-            if (MiscToolsForMD.config.ap_indicator)
+            GUILayout.BeginVertical(null);
+            if (MiscToolsForMDMod.config.ap_indicator)
             {
-                GUIStyle accuracyStyle = new GUIStyle
-                {
-                    alignment = TextAnchor.MiddleCenter,
-                    fontSize = 48
-                };
-                GUILayout.Label(accuracyText, accuracyStyle);
+                GUILayout.Label(accuracyText, null);
             }
-            if (MiscToolsForMD.config.key_indicator)
+            if (MiscToolsForMDMod.config.key_indicator)
             {
-                GUILayout.BeginHorizontal();
+                GUILayout.BeginHorizontal(null);
                 foreach (string key in workingKeys)
                 {
                     if (key != null)
                     {
-                        GUIStyle keyStyle = new GUIStyle
-                        {
-                            alignment = TextAnchor.MiddleCenter,
-                            fontSize = 24
-                        };
                         string keyDisplayName;
                         if (keyDisplayNames.ContainsKey(key))
                         {
@@ -387,7 +356,7 @@ namespace MiscToolsForMD
                         {
                             keyDisplayName = key;
                         }
-                        GUILayout.Label(keyDisplayName + "\n\n" + counters[key], keyStyle);
+                        GUILayout.Label(keyDisplayName + "\n\n" + counters[key], null);
                     }
                 }
                 GUILayout.EndHorizontal();
@@ -401,9 +370,9 @@ namespace MiscToolsForMD
             // Also see:
             // Assets.Scripts.GameCore.HostComponent.BattleEnemyManager.SetPlayResult
             GameLogic.MusicData musicData = Singleton<FormulaBase.StageBattleComponent>.instance.GetMusicDataByIdx(idx);
-            MiscToolsForMD.Log("Music data info: isLongPressing: " + musicData.isLongPressing + "; doubleIdx: " + musicData.doubleIdx + "; isDouble: " +
+            MiscToolsForMDMod.instance.Log("Music data info: isLongPressing: " + musicData.isLongPressing + "; doubleIdx: " + musicData.doubleIdx + "; isDouble: " +
                 musicData.isDouble + "; isLongPressEnd: " + musicData.isLongPressEnd + "; isLongPressStart: " + musicData.isLongPressStart);
-            MiscToolsForMD.Log("Note data info: id: " + musicData.noteData.id + "; type: " + musicData.noteData.type + "; damage: " + musicData.noteData.damage +
+            MiscToolsForMDMod.instance.Log("Note data info: id: " + musicData.noteData.id + "; type: " + musicData.noteData.type + "; damage: " + musicData.noteData.damage +
                 "; pathway: " + musicData.noteData.pathway + "; speed: " + musicData.noteData.speed + "; score: " + musicData.noteData.score + "; missCombo: " +
                 musicData.noteData.missCombo + "; addCombo: " + musicData.noteData.addCombo + "; jumpNote: " + musicData.noteData.jumpNote + "; isShowPlayEffect: " +
                 musicData.noteData.isShowPlayEffect);
@@ -452,7 +421,7 @@ namespace MiscToolsForMD
                         {
                             actualWeight += 1;
                         }
-                        MiscToolsForMD.Log("Normal Note");
+                        MiscToolsForMDMod.instance.Log("Normal Note");
                     }
                 }
                 else
@@ -465,7 +434,7 @@ namespace MiscToolsForMD
                         {
                             actualWeight += 1;
                         }
-                        MiscToolsForMD.Log("Heart Note");
+                        MiscToolsForMDMod.instance.Log("Heart Note");
                     }
                     else if (musicData.noteData.type == (uint)NoteType.Music)
                     {
@@ -475,7 +444,7 @@ namespace MiscToolsForMD
                         {
                             actualWeight += 1;
                         }
-                        MiscToolsForMD.Log("Music Note");
+                        MiscToolsForMDMod.instance.Log("Music Note");
                     }
                     else
                     {
@@ -485,7 +454,7 @@ namespace MiscToolsForMD
                         {
                             actualWeight += 2;
                         }
-                        MiscToolsForMD.Log("Gear Note");
+                        MiscToolsForMDMod.instance.Log("Gear Note");
                     }
                 }
                 if (targetWeight > 0)
@@ -498,7 +467,7 @@ namespace MiscToolsForMD
                     {
                         acc -= unit;
                     }
-                    MiscToolsForMD.Log("Result: " + result + "; current accuracy: " + acc + "; current weight: " + actualWeight + "; target weight: " + targetWeight);
+                    MiscToolsForMDMod.instance.Log("Result: " + result + "; current accuracy: " + acc + "; current weight: " + actualWeight + "; target weight: " + targetWeight);
                     accuracyText = "Accuracy: " + acc.ToString("P");
                 }
             }
@@ -506,13 +475,8 @@ namespace MiscToolsForMD
 
         public void LyricWindow(int windowId)
         {
-            GUILayout.BeginVertical();
-            GUIStyle lyricStyle = new GUIStyle
-            {
-                alignment = TextAnchor.MiddleCenter,
-                fontSize = 48
-            };
-            GUILayout.Label(lyricContent, lyricStyle);
+            GUILayout.BeginVertical(null);
+            GUILayout.Label(lyricContent, null);
             GUILayout.EndVertical();
         }
 
@@ -524,7 +488,7 @@ namespace MiscToolsForMD
                 {
                     uint count = counters[workingKey];
                     counters[workingKey] += num;
-                    MiscToolsForMD.Log("Key " + actKey + " original count:" + count + " added " + num);
+                    MiscToolsForMDMod.instance.Log("Key " + actKey + " original count:" + count + " added " + num);
                 }
             }
         }
