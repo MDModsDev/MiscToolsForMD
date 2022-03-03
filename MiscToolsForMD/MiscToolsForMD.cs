@@ -338,7 +338,12 @@ namespace MiscToolsForMD
             GUILayout.BeginVertical(null);
             if (MiscToolsForMDMod.config.ap_indicator)
             {
-                GUILayout.Label(accuracyText, null);
+                GUIStyle accuracyStyle = new GUIStyle
+                {
+                    alignment = TextAnchor.MiddleCenter,
+                    fontSize = 48
+                };
+                GUILayout.Label(accuracyText, accuracyStyle, null);
             }
             if (MiscToolsForMDMod.config.key_indicator)
             {
@@ -356,7 +361,12 @@ namespace MiscToolsForMD
                         {
                             keyDisplayName = key;
                         }
-                        GUILayout.Label(keyDisplayName + "\n\n" + counters[key], null);
+                        GUIStyle keyStyle = new GUIStyle
+                        {
+                            alignment = TextAnchor.MiddleCenter,
+                            fontSize = 24
+                        };
+                        GUILayout.Label(keyDisplayName + "\n\n" + counters[key], keyStyle, null);
                     }
                 }
                 GUILayout.EndHorizontal();
@@ -475,8 +485,13 @@ namespace MiscToolsForMD
 
         public void LyricWindow(int windowId)
         {
+            GUIStyle lyricStyle = new GUIStyle
+            {
+                alignment = TextAnchor.MiddleCenter,
+                fontSize = 48
+            };
             GUILayout.BeginVertical(null);
-            GUILayout.Label(lyricContent, null);
+            GUILayout.Label(lyricContent, lyricStyle, null);
             GUILayout.EndVertical();
         }
 
