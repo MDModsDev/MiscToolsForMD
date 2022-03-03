@@ -14,11 +14,12 @@ A Muse Dash Mod which contains many features.
 
 ## How to use it
 
-Install mod loader from [here](https://github.com/mo10/MuseDashModLoader), install binary file as a mod, start game and you can see changes.
+Install mod loader from [here](https://github.com/LavaGang/MelonLoader), install binary file as a mod, start game and you can see changes.
 
 ## How to get binary
 
-You can clone this repo, open in Visual Studio and recover the project. Some libraries are nuget packages and you can recover normally, other libraries are in `%Game Folder%\MuseDash_Data\Managed`. Also, you can get `ModHelper` in ModLoader's source code . After recovering project successfully, you can build it and get `MiscToolsForMD.dll` at `%Repo Folder%\MiscToolsForMD\bin\%Build Type%\`
+You can clone this repo, open in Visual Studio and recover the project. Some libraries are nuget packages and you can recover normally, other libraries are in `%Game Folder%\MelonLoader\Managed` after you started game with MelonLoader at least once.  
+After recovering project successfully, you can build it and get `MiscToolsForMD.dll` at `%Repo Folder%\MiscToolsForMD\bin\%Build Type%\`
 
 ## Contributing
 

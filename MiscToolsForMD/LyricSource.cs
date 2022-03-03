@@ -11,7 +11,7 @@ namespace MiscToolsForMD
         string Name { get; }
         string Author { get; }
         string Id { get; }
-        int Priority { get; }
+        uint Priority { get; }
 
         List<Lyric> GetLyrics(string title, string artist);
     }
@@ -19,18 +19,18 @@ namespace MiscToolsForMD
     public class Lyric
     {
         public string content;
-        public double tick;
+        public float time;
 
-        public static Lyric GetLyricByTick(List<Lyric> lst, double tick)
+        public static Lyric GetLyricByTime(List<Lyric> lst, float time)
         {
             foreach (Lyric lyric in lst)
             {
-                if (lyric.tick == tick)
+                if (lyric.time == time)
                 {
                     return lyric;
                 }
             }
-            return new Lyric() { tick = tick, content = "No Lyric" };
+            return new Lyric() { time = time, content = "No Lyric" };
         }
     }
 
@@ -39,18 +39,18 @@ namespace MiscToolsForMD
         public string Name => "local";
         public string Author => "zhanghua000";
         public string Id => Author.ToLower() + "." + Name.ToLower();
-        public int Priority => 0;
+        public uint Priority => 0;
 
         public List<Lyric> GetLyrics(string title, string artist)
         {
-            double offset = 0.0;
-            if (!Directory.Exists("Mods" + Path.DirectorySeparatorChar + "Lyrics"))
+            float offset = 0.0f;
+            if (!Directory.Exists("UserData" + Path.DirectorySeparatorChar + "Lyrics"))
             {
-                Directory.CreateDirectory("Mods" + Path.DirectorySeparatorChar + "Lyrics");
+                Directory.CreateDirectory("UserData" + Path.DirectorySeparatorChar + "Lyrics");
             }
             List<Lyric> result = new List<Lyric>();
             string fileName = title + "-" + artist + ".lrc";
-            string filePath = "Mods" + Path.DirectorySeparatorChar + "Lyrics" + Path.DirectorySeparatorChar + fileName;
+            string filePath = "UserData" + Path.DirectorySeparatorChar + "Lyrics" + Path.DirectorySeparatorChar + fileName;
             if (File.Exists(filePath))
             {
                 string[] fileLines = File.ReadAllLines(filePath);
@@ -64,7 +64,7 @@ namespace MiscToolsForMD
                         }
                         else if (line.StartsWith("[offset:"))
                         {
-                            offset = double.Parse(line.Substring(line.IndexOf(":") + 1).TrimEnd(']')) / 1000; ;
+                            offset = float.Parse(line.Substring(line.IndexOf(":") + 1).TrimEnd(']')) / 1000; ;
                         }
                         else
                         {
@@ -77,8 +77,8 @@ namespace MiscToolsForMD
                                 MatchCollection matchesTime = regexTime.Matches(line);
                                 foreach (Match matchTime in matchesTime)
                                 {
-                                    double tick = TimeSpan.Parse("00:" + matchTime.Groups[1].Value).TotalSeconds + offset;
-                                    result.Add(new Lyric() { content = content, tick = tick });
+                                    float time = (float)TimeSpan.Parse("00:" + matchTime.Groups[1].Value).TotalSeconds + offset;
+                                    result.Add(new Lyric() { content = content, time = time });
                                 }
                             }
                             catch
@@ -87,7 +87,7 @@ namespace MiscToolsForMD
                             }
                         }
                     }
-                    result.OrderBy(lyric => lyric.tick);
+                    result.OrderBy(lyric => lyric.time);
                 }
             }
             return result;
