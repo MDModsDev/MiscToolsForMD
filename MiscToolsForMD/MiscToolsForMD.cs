@@ -22,13 +22,12 @@ namespace MiscToolsForMD
         public static Config config;
         public static MiscToolsForMDMod instance;
         public static Indicator indicator;
-        public static string Name = "MiscToolsForMD";
 
         public override void OnApplicationLateStart()
         {
-            if (System.IO.File.Exists("UserData" + System.IO.Path.DirectorySeparatorChar + Name + ".json"))
+            if (System.IO.File.Exists("UserData" + System.IO.Path.DirectorySeparatorChar + "MiscToolsForMD.json"))
             {
-                config = JsonConvert.DeserializeObject<Config>(System.IO.File.ReadAllText("UserData" + System.IO.Path.DirectorySeparatorChar + Name + ".json"));
+                config = JsonConvert.DeserializeObject<Config>(System.IO.File.ReadAllText("UserData" + System.IO.Path.DirectorySeparatorChar + "MiscToolsForMD.json"));
             }
             else
             {
@@ -50,9 +49,8 @@ namespace MiscToolsForMD
             if (config.ap_indicator)
             {
                 MethodInfo addCount = typeof(TaskStageTarget).GetMethod("AddCount");
-                MethodInfo countPatch = typeof(MiscToolsForMDMod).GetMethod(nameof(AddCount), BindingFlags.Static | BindingFlags.NonPublic);
-                HarmonyInstance.Patch(addCount, null, new HarmonyMethod(countPatch));
-
+                MethodInfo addCountPatch = typeof(MiscToolsForMDMod).GetMethod(nameof(AddCount), BindingFlags.Static | BindingFlags.NonPublic);
+                HarmonyInstance.Patch(addCount, null, new HarmonyMethod(addCountPatch));
             }
             if (config.lyric)
             {
@@ -63,7 +61,6 @@ namespace MiscToolsForMD
             instance = this;
             LoggerInstance.Msg("MiscToolsForMD Loads Completed.");
         }
-
         private static void AddCount(uint result,int value)
         {
             if (value == 1)
@@ -135,21 +132,21 @@ namespace MiscToolsForMD
             return keys;
         }
 
-        public void Log(object log, object normal_log = null)
+        public void Log(object log, object normalLog = null)
         {
             if (config.debug)
             {
                 LoggerInstance.Msg(log);
             }
-            else if (normal_log != null)
+            else if (normalLog != null)
             {
-                LoggerInstance.Msg(normal_log);
+                LoggerInstance.Msg(normalLog);
             }
         }
 
         public void SaveConfig()
         {
-            System.IO.File.WriteAllText("UserData" + System.IO.Path.DirectorySeparatorChar + Name + ".json", JsonConvert.SerializeObject(config, Formatting.Indented));
+            System.IO.File.WriteAllText("UserData" + System.IO.Path.DirectorySeparatorChar + "MiscToolsForMD.json", JsonConvert.SerializeObject(config, Formatting.Indented));
         }
     }
 
@@ -256,7 +253,7 @@ namespace MiscToolsForMD
                 }
                 else
                 {
-                    MiscToolsForMDMod.instance.LoggerInstance.Msg("Unexcepted Keys List.");
+                    MiscToolsForMDMod.instance.LoggerInstance.Error("Unexcepted Keys List.");
                 }
                 windowRect = new Rect(MiscToolsForMDMod.config.x, MiscToolsForMDMod.config.y, MiscToolsForMDMod.config.width, MiscToolsForMDMod.config.height);
                 actualWeight = 0;
@@ -304,12 +301,12 @@ namespace MiscToolsForMD
                     }
                     catch (Exception ex)
                     {
-                        MiscToolsForMDMod.instance.Log(ex.ToString(), "Failed to get lyric through source " + source.Name);
+                        MiscToolsForMDMod.instance.LoggerInstance.Error(ex.ToString(), "Failed to get lyric through source " + source.Name);
                     }
                 }
                 if (!successGetLyric || lyrics.Count == 0)
                 {
-                    MiscToolsForMDMod.instance.Log("No available lyric.");
+                    MiscToolsForMDMod.instance.LoggerInstance.Error("No available lyric.");
                 }
                 lyricWindowRect = new Rect(MiscToolsForMDMod.config.lyric_x, MiscToolsForMDMod.config.lyric_y, MiscToolsForMDMod.config.lyric_width, MiscToolsForMDMod.config.lyric_height);
                 lyricContent = "";
@@ -418,9 +415,7 @@ namespace MiscToolsForMD
             {
                 if (workingKey == actKey)
                 {
-                    uint count = counters[workingKey];
                     counters[workingKey] += num;
-                    MiscToolsForMDMod.instance.Log("Key " + actKey + " original count:" + count + " added " + num);
                 }
             }
         }
