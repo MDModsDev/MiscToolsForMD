@@ -61,7 +61,8 @@ namespace MiscToolsForMD
             instance = this;
             LoggerInstance.Msg("MiscToolsForMD Loads Completed.");
         }
-        private static void AddCount(uint result,int value)
+
+        private static void AddCount(uint result, int value)
         {
             if (value == 1)
             {
@@ -194,7 +195,7 @@ namespace MiscToolsForMD
         private List<string> workingKeys;
         private Dictionary<string, uint> counters;
         private Rect lyricWindowRect = new Rect(MiscToolsForMDMod.config.lyric_x, MiscToolsForMDMod.config.lyric_y, MiscToolsForMDMod.config.lyric_width, MiscToolsForMDMod.config.lyric_height);
-        
+
         private readonly Dictionary<string, string> keyDisplayNames = new Dictionary<string, string>()
         {
             {"Backspace", "←"}, {"Delete", "Del"}, {"Tab", "Tab"}, {"Return", "↲"}, {"Escape", "Esc"}, {"Keypad0", "0"}, {"Keypad1", "1"}, {"Keypad2", "2"},
@@ -212,17 +213,20 @@ namespace MiscToolsForMD
         public int actualWeight = 0;
         public int targetWeight = 0;
         private List<Lyric> lyrics;
-        public Indicator(IntPtr intPtr) : base(intPtr) { }
+
+        public Indicator(IntPtr intPtr) : base(intPtr)
+        {
+        }
 
         public void OnGUI()
         {
             if (MiscToolsForMDMod.config.ap_indicator || MiscToolsForMDMod.config.key_indicator)
             {
-                windowRect = GUILayout.Window(0, windowRect, (GUI.WindowFunction)IndicatorWindow, "MiscToolsUI",null);
+                windowRect = GUILayout.Window(0, windowRect, (GUI.WindowFunction)IndicatorWindow, "MiscToolsUI", null);
             }
             if (MiscToolsForMDMod.config.lyric)
             {
-                lyricWindowRect = GUILayout.Window(1, lyricWindowRect, (GUI.WindowFunction)LyricWindow, "Lyric",null);
+                lyricWindowRect = GUILayout.Window(1, lyricWindowRect, (GUI.WindowFunction)LyricWindow, "Lyric", null);
             }
         }
 
@@ -409,6 +413,7 @@ namespace MiscToolsForMD
                 accuracyText = "Accuracy: " + acc.ToString("P");
             }
         }
+
         private void AddKeyCount(string actKey, uint num = 1)
         {
             foreach (string workingKey in workingKeys)
