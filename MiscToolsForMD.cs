@@ -15,6 +15,9 @@ using UnhollowerRuntimeLib;
 using UnityEngine;
 using UnityEngine.UI;
 
+[assembly: MelonInfo(typeof(MiscToolsForMD.MiscToolsForMDMod), "MiscToolsForMDMod", "1.0.0", "MDModsDev")]
+[assembly: MelonGame("PeroPeroGames", "MuseDash")]
+
 namespace MiscToolsForMD
 {
     public class MiscToolsForMDMod : MelonMod
