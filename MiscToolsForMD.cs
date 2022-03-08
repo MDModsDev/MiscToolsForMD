@@ -13,6 +13,7 @@ using System.Linq;
 using System.Reflection;
 using UnhollowerRuntimeLib;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace MiscToolsForMD
 {
@@ -22,7 +23,8 @@ namespace MiscToolsForMD
         public static Config config;
         public static MiscToolsForMDMod instance;
         public static Indicator indicator;
-
+        private static bool isBattleScene;
+        private static bool Set;
         public override void OnApplicationLateStart()
         {
             if (System.IO.File.Exists("UserData" + System.IO.Path.DirectorySeparatorChar + "MiscToolsForMD.json"))
@@ -61,8 +63,55 @@ namespace MiscToolsForMD
             instance = this;
             LoggerInstance.Msg("MiscToolsForMD Loads Completed.");
         }
+        public override void OnSceneWasLoaded(int buildIndex, string sceneName)
+        {
+            base.OnSceneWasLoaded(buildIndex, sceneName);
+            if (sceneName == "GameMain")
+            {
+                isBattleScene = true;
+            }
+            else
+            {
+                isBattleScene = false;
+            }
+        }
 
-        private static void AddCount(uint result, int value)
+        public override void OnUpdate()
+        {
+            base.OnUpdate();
+            if (isBattleScene && Set)
+            {
+                SetGameobject();
+            }
+        }
+
+        private static void SetGameobject()
+        {
+            Set = false;
+            // create gameobject called FC and AP
+            GameObject FC = new GameObject("FC Indicator");
+            GameObject AP = new GameObject("AP Indicator");
+            // create text component
+            Text FCtext = FC.AddComponent<Text>();
+            Text APtext = AP.AddComponent<Text>(); ;
+            // set text
+            FCtext.text = "FC";
+            APtext.text = "AP";
+            // set color
+            FCtext.color = Color.white;
+            APtext.color = Color.white;
+            // set position
+            FC.transform.position = new Vector3(0, 0, 0);
+            AP.transform.position = new Vector3(0, 0, 0);
+            // set font size
+            FCtext.fontSize = 20;
+            APtext.fontSize = 20;
+            // set active
+            FC.SetActive(true);
+            AP.SetActive(true);
+        }
+
+        private static void AddCount(uint result,int value)
         {
             if (value == 1)
             {
