@@ -25,6 +25,7 @@ namespace MiscToolsForMD
         public static Indicator indicator;
         private static bool isBattleScene;
         private static bool Set;
+
         public override void OnApplicationLateStart()
         {
             if (System.IO.File.Exists("UserData" + System.IO.Path.DirectorySeparatorChar + "MiscToolsForMD.json"))
@@ -63,6 +64,7 @@ namespace MiscToolsForMD
             instance = this;
             LoggerInstance.Msg("MiscToolsForMD Loads Completed.");
         }
+
         public override void OnSceneWasLoaded(int buildIndex, string sceneName)
         {
             base.OnSceneWasLoaded(buildIndex, sceneName);
@@ -111,7 +113,7 @@ namespace MiscToolsForMD
             AP.SetActive(true);
         }
 
-        private static void AddCount(uint result,int value)
+        private static void AddCount(uint result, int value)
         {
             if (value == 1)
             {

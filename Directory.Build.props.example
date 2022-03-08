@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project>
  <PropertyGroup>
-   <GameDir>D:\Steam\steamapps\common\Muse Dash</GameDir>
+   <GameDir>SET GAME FOLDER HERE</GameDir>
  </PropertyGroup>
 </Project>

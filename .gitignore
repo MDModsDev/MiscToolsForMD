@@ -364,3 +364,6 @@ FodyWeavers.xsd
 
 # Ignore ModHelper
 ModHelper
+
+# Ignore Build.props
+Directory.Build.props
