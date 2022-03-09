@@ -13,7 +13,6 @@ using System.Linq;
 using System.Reflection;
 using UnhollowerRuntimeLib;
 using UnityEngine;
-using UnityEngine.UI;
 
 [assembly: MelonInfo(typeof(MiscToolsForMD.MiscToolsForMDMod), "MiscToolsForMDMod", "1.0.0", "MDModsDev")]
 [assembly: MelonGame("PeroPeroGames", "MuseDash")]
@@ -26,8 +25,6 @@ namespace MiscToolsForMD
         public static Config config;
         public static MiscToolsForMDMod instance;
         public static Indicator indicator;
-        private static bool isBattleScene;
-        private static bool Set;
 
         public override void OnApplicationLateStart()
         {
@@ -66,54 +63,6 @@ namespace MiscToolsForMD
             }
             instance = this;
             LoggerInstance.Msg("MiscToolsForMD Loads Completed.");
-        }
-
-        public override void OnSceneWasLoaded(int buildIndex, string sceneName)
-        {
-            base.OnSceneWasLoaded(buildIndex, sceneName);
-            if (sceneName == "GameMain")
-            {
-                isBattleScene = true;
-            }
-            else
-            {
-                isBattleScene = false;
-            }
-        }
-
-        public override void OnUpdate()
-        {
-            base.OnUpdate();
-            if (isBattleScene && Set)
-            {
-                SetGameobject();
-            }
-        }
-
-        private static void SetGameobject()
-        {
-            Set = false;
-            // create gameobject called FC and AP
-            GameObject FC = new("FC Indicator");
-            GameObject AP = new("AP Indicator");
-            // create text component
-            Text FCtext = FC.AddComponent<Text>();
-            Text APtext = AP.AddComponent<Text>(); ;
-            // set text
-            FCtext.text = "FC";
-            APtext.text = "AP";
-            // set color
-            FCtext.color = Color.white;
-            APtext.color = Color.white;
-            // set position
-            FC.transform.position = new Vector3(0, 0, 0);
-            AP.transform.position = new Vector3(0, 0, 0);
-            // set font size
-            FCtext.fontSize = 20;
-            APtext.fontSize = 20;
-            // set active
-            FC.SetActive(true);
-            AP.SetActive(true);
         }
 
         private static void AddCount(uint result, int value)
@@ -252,16 +201,79 @@ namespace MiscToolsForMD
 
         private readonly Dictionary<string, string> keyDisplayNames = new()
         {
-            {"Backspace", "←"}, {"Delete", "Del"}, {"Tab", "Tab"}, {"Return", "↲"}, {"Escape", "Esc"}, {"Keypad0", "0"}, {"Keypad1", "1"}, {"Keypad2", "2"},
-            {"Keypad3", "3"}, {"Keypad4", "4"}, {"Keypad5", "5"}, {"Keypad6", "6"}, {"Keypad7", "7"}, {"Keypad8", "8"}, {"Keypad9", "9"}, {"KeypadPeriod", "."},
-            {"KeypadDivide", "/"}, {"KeypadMultiply", "*"}, {"KeypadMinus", "-"}, {"KeypadPlus", "+"}, {"KeypadEnter", "↲"}, {"KeypadEquals", "="}, {"UpArrow", "↑"},
-            {"DownArrow", "↓"}, {"RightArrow", "→" }, {"LeftArrow", "←"}, {"Insert", "Ins"}, {"Home", "Home"}, {"End", "End"}, {"PageUp", "PgUp"}, {"PageDown", "PgDn"},
-            {"Alpha0", "0"}, {"Alpha1", "1"}, {"Alpha2", "2"}, {"Alpha3", "3"},{"Alpha4", "4"}, {"Alpha5", "5"}, {"Alpha6", "6"}, {"Alpha7", "7"}, {"Alpha8", "8"},
-            {"Alpha9", "9"}, {"Exclaim", "!"}, {"DoubbleQuote", "\""}, {"Hash", "#"}, {"Dollar", "$"}, {"Percent", "%"}, {"Ampersand", "&"}, {"Quote", "'"},
-            {"LeftParen", "("}, {"RightParen", ")"}, {"Asterisk", "*"},{"Plus", "+"}, {"Comma", ","}, {"Minus", "-"}, {"Period", "."}, {"Slash", "/"},{"Colon", ":"},
-            {"Semicolon", ";"}, {"Less", "<"}, {"Equals", "="}, {"Greater", ">"}, {"Question", "?"}, {"At", "@"}, {"LeftBracket", "["}, {"RightBracket", "]"},
-            {"Backslash", "\\"}, {"Caret", "^"}, {"Underscore", "_"}, {"BackQuote", "`"}, {"LeftCurlyBracket", "{"}, {"RightCurlyBracket", "}"}, {"Pipe", "|"},
-            {"Tilde", "~"}
+            { "Backspace", "←" },
+            { "Delete", "Del" },
+            { "Tab", "Tab" },
+            { "Return", "↲" },
+            { "Escape", "Esc" },
+            { "Keypad0", "0" },
+            { "Keypad1", "1" },
+            { "Keypad2", "2" },
+            { "Keypad3", "3" },
+            { "Keypad4", "4" },
+            { "Keypad5", "5" },
+            { "Keypad6", "6" },
+            { "Keypad7", "7" },
+            { "Keypad8", "8" },
+            { "Keypad9", "9" },
+            { "KeypadPeriod", "." },
+            { "KeypadDivide", "/" },
+            { "KeypadMultiply", "*" },
+            { "KeypadMinus", "-" },
+            { "KeypadPlus", "+" },
+            { "KeypadEnter", "↲" },
+            { "KeypadEquals", "=" },
+            { "UpArrow", "↑" },
+            { "DownArrow", "↓" },
+            { "RightArrow", "→" },
+            { "LeftArrow", "←" },
+            { "Insert", "Ins" },
+            { "Home", "Home" },
+            { "End", "End" },
+            { "PageUp", "PgUp" },
+            { "PageDown", "PgDn" },
+            { "Alpha0", "0" },
+            { "Alpha1", "1" },
+            { "Alpha2", "2" },
+            { "Alpha3", "3" },
+            { "Alpha4", "4" },
+            { "Alpha5", "5" },
+            { "Alpha6", "6" },
+            { "Alpha7", "7" },
+            { "Alpha8", "8" },
+            { "Alpha9", "9" },
+            { "Exclaim", "!" },
+            { "DoubbleQuote", "\"" },
+            { "Hash", "#" },
+            { "Dollar", "$" },
+            { "Percent", "%" },
+            { "Ampersand", "&" },
+            { "Quote", "'" },
+            { "LeftParen", "(" },
+            { "RightParen", ")" },
+            { "Asterisk", "*" },
+            { "Plus", "+" },
+            { "Comma", "," },
+            { "Minus", "-" },
+            { "Period", "." },
+            { "Slash", "/" },
+            { "Colon", ":" },
+            { "Semicolon", ";" },
+            { "Less", "<" },
+            { "Equals", "=" },
+            { "Greater", ">" },
+            { "Question", "?" },
+            { "At", "@" },
+            { "LeftBracket", "[" },
+            { "RightBracket", "]" },
+            { "Backslash", "\\" },
+            { "Caret", "^" },
+            { "Underscore", "_" },
+            { "BackQuote", "`" },
+            { "LeftCurlyBracket", "{" },
+            { "RightCurlyBracket", "}" },
+            { "Pipe", "|" },
+            { "Tilde", "~" }
         };
 
         public int actualWeight = 0;
