@@ -3,11 +3,6 @@ using System.IO;
 
 namespace MiscToolsForMD
 {
-    public class MiscToolsForMDHelpers
-    {
-        public static Config config;
-    }
-
     public class Defines
     {
         public static readonly Dictionary<string, string> keyDisplayNames = new()

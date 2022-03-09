@@ -9,11 +9,11 @@ namespace MiscToolsForMD
 {
     public class Indicator : MonoBehaviour
     {
-        private Rect windowRect = new(MiscToolsForMDHelpers.config.x, MiscToolsForMDHelpers.config.y, MiscToolsForMDHelpers.config.width, MiscToolsForMDHelpers.config.height);
+        private Rect windowRect = new(MiscToolsForMDMod.config.x, MiscToolsForMDMod.config.y, MiscToolsForMDMod.config.width, MiscToolsForMDMod.config.height);
         private string accuracyText, lyricContent;
         private List<string> workingKeys;
         private Dictionary<string, uint> counters;
-        private Rect lyricWindowRect = new(MiscToolsForMDHelpers.config.lyric_x, MiscToolsForMDHelpers.config.lyric_y, MiscToolsForMDHelpers.config.lyric_width, MiscToolsForMDHelpers.config.lyric_height);
+        private Rect lyricWindowRect = new(MiscToolsForMDMod.config.lyric_x, MiscToolsForMDMod.config.lyric_y, MiscToolsForMDMod.config.lyric_width, MiscToolsForMDMod.config.lyric_height);
         private readonly Dictionary<string, string> keyDisplayNames = Defines.keyDisplayNames;
         public int actualWeight = 0;
         public int targetWeight = 0;
@@ -25,11 +25,11 @@ namespace MiscToolsForMD
 
         public void OnGUI()
         {
-            if (MiscToolsForMDHelpers.config.ap_indicator || MiscToolsForMDHelpers.config.key_indicator)
+            if (MiscToolsForMDMod.config.ap_indicator || MiscToolsForMDMod.config.key_indicator)
             {
                 windowRect = GUILayout.Window(0, windowRect, (GUI.WindowFunction)IndicatorWindow, "MiscToolsUI", null);
             }
-            if (MiscToolsForMDHelpers.config.lyric)
+            if (MiscToolsForMDMod.config.lyric)
             {
                 lyricWindowRect = GUILayout.Window(1, lyricWindowRect, (GUI.WindowFunction)LyricWindow, "Lyric", null);
             }
@@ -38,16 +38,16 @@ namespace MiscToolsForMD
         public void Start()
         {
             bool needUpdateConfig = false;
-            if (MiscToolsForMDHelpers.config.ap_indicator || MiscToolsForMDHelpers.config.key_indicator)
+            if (MiscToolsForMDMod.config.ap_indicator || MiscToolsForMDMod.config.key_indicator)
             {
-                if (MiscToolsForMDHelpers.config.x == -1)
+                if (MiscToolsForMDMod.config.x == -1)
                 {
-                    MiscToolsForMDHelpers.config.x = (Screen.width - MiscToolsForMDHelpers.config.width) / 2;
+                    MiscToolsForMDMod.config.x = (Screen.width - MiscToolsForMDMod.config.width) / 2;
                     needUpdateConfig = true;
                 }
-                if (MiscToolsForMDHelpers.config.y == -1)
+                if (MiscToolsForMDMod.config.y == -1)
                 {
-                    MiscToolsForMDHelpers.config.y = 20;
+                    MiscToolsForMDMod.config.y = 20;
                     needUpdateConfig |= true;
                 }
                 accuracyText = "Accuracy: " + 1.ToString("P");
@@ -64,20 +64,20 @@ namespace MiscToolsForMD
                 {
                     MiscToolsForMDMod.instance.LoggerInstance.Error("Unexcepted Keys List.");
                 }
-                windowRect = new Rect(MiscToolsForMDHelpers.config.x, MiscToolsForMDHelpers.config.y, MiscToolsForMDHelpers.config.width, MiscToolsForMDHelpers.config.height);
+                windowRect = new Rect(MiscToolsForMDMod.config.x, MiscToolsForMDMod.config.y, MiscToolsForMDMod.config.width, MiscToolsForMDMod.config.height);
                 actualWeight = 0;
                 targetWeight = 0;
             }
-            if (MiscToolsForMDHelpers.config.lyric)
+            if (MiscToolsForMDMod.config.lyric)
             {
-                if (MiscToolsForMDHelpers.config.lyric_x == -1)
+                if (MiscToolsForMDMod.config.lyric_x == -1)
                 {
-                    MiscToolsForMDHelpers.config.lyric_x = (Screen.width - MiscToolsForMDHelpers.config.lyric_width) / 2;
+                    MiscToolsForMDMod.config.lyric_x = (Screen.width - MiscToolsForMDMod.config.lyric_width) / 2;
                     needUpdateConfig = true;
                 }
-                if (MiscToolsForMDHelpers.config.lyric_y == -1)
+                if (MiscToolsForMDMod.config.lyric_y == -1)
                 {
-                    MiscToolsForMDHelpers.config.lyric_y = Screen.height - MiscToolsForMDHelpers.config.lyric_height - 100;
+                    MiscToolsForMDMod.config.lyric_y = Screen.height - MiscToolsForMDMod.config.lyric_height - 100;
                     needUpdateConfig = true;
                 }
                 // See SetSelectedMusicNameTxt
@@ -117,7 +117,7 @@ namespace MiscToolsForMD
                 {
                     MiscToolsForMDMod.instance.LoggerInstance.Error("No available lyric.");
                 }
-                lyricWindowRect = new Rect(MiscToolsForMDHelpers.config.lyric_x, MiscToolsForMDHelpers.config.lyric_y, MiscToolsForMDHelpers.config.lyric_width, MiscToolsForMDHelpers.config.lyric_height);
+                lyricWindowRect = new Rect(MiscToolsForMDMod.config.lyric_x, MiscToolsForMDMod.config.lyric_y, MiscToolsForMDMod.config.lyric_width, MiscToolsForMDMod.config.lyric_height);
                 lyricContent = "";
             }
             if (needUpdateConfig)
@@ -128,7 +128,7 @@ namespace MiscToolsForMD
 
         public void Update()
         {
-            if (MiscToolsForMDHelpers.config.key_indicator)
+            if (MiscToolsForMDMod.config.key_indicator)
             {
                 foreach (string key in workingKeys)
                 {
@@ -138,7 +138,7 @@ namespace MiscToolsForMD
                     }
                 }
             }
-            if (MiscToolsForMDHelpers.config.lyric)
+            if (MiscToolsForMDMod.config.lyric)
             {
                 float time = Singleton<FormulaBase.StageBattleComponent>.instance.timeFromMusicStart;
                 lyricContent = Lyric.GetLyricByTime(lyrics, time).content;
@@ -153,7 +153,7 @@ namespace MiscToolsForMD
         public void IndicatorWindow(int windowID)
         {
             GUILayout.BeginVertical(null);
-            if (MiscToolsForMDHelpers.config.ap_indicator)
+            if (MiscToolsForMDMod.config.ap_indicator)
             {
                 GUIStyle accuracyStyle = new()
                 {
@@ -162,7 +162,7 @@ namespace MiscToolsForMD
                 };
                 GUILayout.Label(accuracyText, accuracyStyle, null);
             }
-            if (MiscToolsForMDHelpers.config.key_indicator)
+            if (MiscToolsForMDMod.config.key_indicator)
             {
                 GUILayout.BeginHorizontal(null);
                 foreach (string key in workingKeys)

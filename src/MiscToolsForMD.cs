@@ -17,6 +17,7 @@ namespace MiscToolsForMD
     public class MiscToolsForMDMod : MelonMod
     {
         public List<ILyricSource> lyricSources = new();
+        public static Config config;
         public static MiscToolsForMDMod instance;
         public static Indicator indicator;
 
@@ -24,16 +25,16 @@ namespace MiscToolsForMD
         {
             if (System.IO.File.Exists(Defines.configPath))
             {
-                MiscToolsForMDHelpers.config = JsonConvert.DeserializeObject<Config>(System.IO.File.ReadAllText(Defines.configPath));
+                config = JsonConvert.DeserializeObject<Config>(System.IO.File.ReadAllText(Defines.configPath));
             }
             else
             {
-                MiscToolsForMDHelpers.config = new Config();
+                config = new Config();
                 SaveConfig();
             }
-            MiscToolsForMDHelpers.config.debug = MiscToolsForMDHelpers.config.debug || MelonDebug.IsEnabled();
-            LoggerInstance.Msg("Debug mode:" + MiscToolsForMDHelpers.config.debug);
-            if (MiscToolsForMDHelpers.config.ap_indicator || MiscToolsForMDHelpers.config.key_indicator || MiscToolsForMDHelpers.config.lyric)
+            config.debug = config.debug || MelonDebug.IsEnabled();
+            LoggerInstance.Msg("Debug mode:" + config.debug);
+            if (config.ap_indicator || config.key_indicator || config.lyric)
             {
                 MethodInfo start = typeof(GameOptimization).GetMethod("Init");
                 MethodInfo startPatch = typeof(MiscToolsForMDMod).GetMethod(nameof(InitUI), BindingFlags.Static | BindingFlags.NonPublic);
@@ -43,13 +44,13 @@ namespace MiscToolsForMD
             {
                 LoggerInstance.Msg("Nothing was applied.");
             }
-            if (MiscToolsForMDHelpers.config.ap_indicator)
+            if (config.ap_indicator)
             {
                 MethodInfo addCount = typeof(TaskStageTarget).GetMethod("AddCount");
                 MethodInfo addCountPatch = typeof(MiscToolsForMDMod).GetMethod(nameof(AddCount), BindingFlags.Static | BindingFlags.NonPublic);
                 HarmonyInstance.Patch(addCount, null, new HarmonyMethod(addCountPatch));
             }
-            if (MiscToolsForMDHelpers.config.lyric)
+            if (config.lyric)
             {
                 lyricSources.Add(new LocalSource());
                 // TODO: Load other lyric source
@@ -132,7 +133,7 @@ namespace MiscToolsForMD
 
         public void Log(object log, object normalLog = null)
         {
-            if (MiscToolsForMDHelpers.config.debug)
+            if (config.debug)
             {
                 LoggerInstance.Msg(log);
             }
@@ -144,7 +145,7 @@ namespace MiscToolsForMD
 
         public void SaveConfig()
         {
-            System.IO.File.WriteAllText(Defines.configPath, JsonConvert.SerializeObject(MiscToolsForMDHelpers.config, Formatting.Indented));
+            System.IO.File.WriteAllText(Defines.configPath, JsonConvert.SerializeObject(config, Formatting.Indented));
         }
     }
 }
