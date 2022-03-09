@@ -12,9 +12,11 @@
       </PropertyGroup>  
       <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
         <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+        <WarningsNotAsErrors>TODO</WarningsNotAsErrors>
       </PropertyGroup>  
       <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
         <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+        <WarningsNotAsErrors>TODO</WarningsNotAsErrors>
       </PropertyGroup>  
       <ItemGroup>
         <None Remove=".gitattributes" />

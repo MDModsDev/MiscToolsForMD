@@ -48,7 +48,7 @@ namespace MiscToolsForMD
             {
                 Directory.CreateDirectory("UserData" + Path.DirectorySeparatorChar + "Lyrics");
             }
-            List<Lyric> result = new List<Lyric>();
+            List<Lyric> result = new();
             string fileName = title + "-" + artist + ".lrc";
             string filePath = "UserData" + Path.DirectorySeparatorChar + "Lyrics" + Path.DirectorySeparatorChar + fileName;
             if (File.Exists(filePath))
@@ -70,10 +70,10 @@ namespace MiscToolsForMD
                         {
                             try
                             {
-                                Regex regexWord = new Regex(@".*\](.*)");
+                                Regex regexWord = new(@".*\](.*)");
                                 Match matchesWord = regexWord.Match(line);
                                 string content = matchesWord.Groups[1].Value;
-                                Regex regexTime = new Regex(@"\[([0-9.:]*)\]", RegexOptions.Compiled);
+                                Regex regexTime = new(@"\[([0-9.:]*)\]", RegexOptions.Compiled);
                                 MatchCollection matchesTime = regexTime.Matches(line);
                                 foreach (Match matchTime in matchesTime)
                                 {

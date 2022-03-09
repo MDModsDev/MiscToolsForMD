@@ -94,8 +94,8 @@ namespace MiscToolsForMD
         {
             Set = false;
             // create gameobject called FC and AP
-            GameObject FC = new GameObject("FC Indicator");
-            GameObject AP = new GameObject("AP Indicator");
+            GameObject FC = new("FC Indicator");
+            GameObject AP = new("AP Indicator");
             // create text component
             Text FCtext = FC.AddComponent<Text>();
             Text APtext = AP.AddComponent<Text>(); ;
@@ -165,7 +165,7 @@ namespace MiscToolsForMD
 
         public static List<string> GetControlKeys()
         {
-            List<string> keys = new List<string>();
+            List<string> keys = new();
             string text;
             if (PlayerPrefs.HasKey("Controller"))
             {
@@ -244,13 +244,13 @@ namespace MiscToolsForMD
 
     public class Indicator : MonoBehaviour
     {
-        private Rect windowRect = new Rect(MiscToolsForMDMod.config.x, MiscToolsForMDMod.config.y, MiscToolsForMDMod.config.width, MiscToolsForMDMod.config.height);
+        private Rect windowRect = new(MiscToolsForMDMod.config.x, MiscToolsForMDMod.config.y, MiscToolsForMDMod.config.width, MiscToolsForMDMod.config.height);
         private string accuracyText, lyricContent;
         private List<string> workingKeys;
         private Dictionary<string, uint> counters;
-        private Rect lyricWindowRect = new Rect(MiscToolsForMDMod.config.lyric_x, MiscToolsForMDMod.config.lyric_y, MiscToolsForMDMod.config.lyric_width, MiscToolsForMDMod.config.lyric_height);
+        private Rect lyricWindowRect = new(MiscToolsForMDMod.config.lyric_x, MiscToolsForMDMod.config.lyric_y, MiscToolsForMDMod.config.lyric_width, MiscToolsForMDMod.config.lyric_height);
 
-        private readonly Dictionary<string, string> keyDisplayNames = new Dictionary<string, string>()
+        private readonly Dictionary<string, string> keyDisplayNames = new()
         {
             {"Backspace", "←"}, {"Delete", "Del"}, {"Tab", "Tab"}, {"Return", "↲"}, {"Escape", "Esc"}, {"Keypad0", "0"}, {"Keypad1", "1"}, {"Keypad2", "2"},
             {"Keypad3", "3"}, {"Keypad4", "4"}, {"Keypad5", "5"}, {"Keypad6", "6"}, {"Keypad7", "7"}, {"Keypad8", "8"}, {"Keypad9", "9"}, {"KeypadPeriod", "."},
@@ -404,7 +404,7 @@ namespace MiscToolsForMD
             GUILayout.BeginVertical(null);
             if (MiscToolsForMDMod.config.ap_indicator)
             {
-                GUIStyle accuracyStyle = new GUIStyle
+                GUIStyle accuracyStyle = new()
                 {
                     alignment = TextAnchor.MiddleCenter,
                     fontSize = 48
@@ -427,7 +427,7 @@ namespace MiscToolsForMD
                         {
                             keyDisplayName = key;
                         }
-                        GUIStyle keyStyle = new GUIStyle
+                        GUIStyle keyStyle = new()
                         {
                             alignment = TextAnchor.MiddleCenter,
                             fontSize = 24
@@ -442,7 +442,7 @@ namespace MiscToolsForMD
 
         public void LyricWindow(int windowId)
         {
-            GUIStyle lyricStyle = new GUIStyle
+            GUIStyle lyricStyle = new()
             {
                 alignment = TextAnchor.MiddleCenter,
                 fontSize = 48
