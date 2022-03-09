@@ -22,7 +22,7 @@ namespace MiscToolsForMD
 {
     public class MiscToolsForMDMod : MelonMod
     {
-        public List<ILyricSource> lyricSources = new List<ILyricSource>();
+        public List<ILyricSource> lyricSources = new();
         public static Config config;
         public static MiscToolsForMDMod instance;
         public static Indicator indicator;
