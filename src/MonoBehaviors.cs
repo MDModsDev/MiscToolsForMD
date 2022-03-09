@@ -1,4 +1,5 @@
 ﻿using Assets.Scripts.Database;
+using Assets.Scripts.GameCore.HostComponent;
 using Assets.Scripts.PeroTools.Commons;
 using Assets.Scripts.PeroTools.Managers;
 using System;
@@ -9,12 +10,25 @@ namespace MiscToolsForMD
 {
     public class Indicator : MonoBehaviour
     {
+        private readonly Dictionary<string, string> keyDisplayNames = Defines.keyDisplayNames;
         private Rect windowRect = new(MiscToolsForMDMod.config.x, MiscToolsForMDMod.config.y, MiscToolsForMDMod.config.width, MiscToolsForMDMod.config.height);
         private string accuracyText, lyricContent;
         private List<string> workingKeys;
         private Dictionary<string, uint> counters;
         private Rect lyricWindowRect = new(MiscToolsForMDMod.config.lyric_x, MiscToolsForMDMod.config.lyric_y, MiscToolsForMDMod.config.lyric_width, MiscToolsForMDMod.config.lyric_height);
-        private readonly Dictionary<string, string> keyDisplayNames = Defines.keyDisplayNames;
+
+        private readonly GUIStyle accuracyStyle = new()
+        {
+            alignment = TextAnchor.MiddleCenter,
+            fontSize = 48
+        };
+
+        private readonly GUIStyle keyStyle = new()
+        {
+            alignment = TextAnchor.MiddleCenter,
+            fontSize = 24
+        };
+
         public int actualWeight = 0;
         public int targetWeight = 0;
         private List<Lyric> lyrics;
@@ -51,6 +65,7 @@ namespace MiscToolsForMD
                     needUpdateConfig |= true;
                 }
                 accuracyText = "Accuracy: " + 1.ToString("P");
+                accuracyStyle.normal.textColor = Defines.apColor;
                 workingKeys = MiscToolsForMDMod.GetControlKeys();
                 counters = new Dictionary<string, uint>();
                 if (workingKeys.Count >= 3 && workingKeys.Count <= 9)
@@ -155,11 +170,6 @@ namespace MiscToolsForMD
             GUILayout.BeginVertical(null);
             if (MiscToolsForMDMod.config.ap_indicator)
             {
-                GUIStyle accuracyStyle = new()
-                {
-                    alignment = TextAnchor.MiddleCenter,
-                    fontSize = 48
-                };
                 GUILayout.Label(accuracyText, accuracyStyle, null);
             }
             if (MiscToolsForMDMod.config.key_indicator)
@@ -178,11 +188,6 @@ namespace MiscToolsForMD
                         {
                             keyDisplayName = key;
                         }
-                        GUIStyle keyStyle = new()
-                        {
-                            alignment = TextAnchor.MiddleCenter,
-                            fontSize = 24
-                        };
                         GUILayout.Label(keyDisplayName + "\n\n" + counters[key], keyStyle, null);
                     }
                 }
@@ -216,6 +221,17 @@ namespace MiscToolsForMD
                     acc -= unit;
                 }
                 accuracyText = "Accuracy: " + acc.ToString("P");
+                if (acc < 1f)
+                {
+                    if (Singleton<TaskStageTarget>.instance.GetMiss() > 0)
+                    {
+                        accuracyStyle.normal.textColor = Defines.missColor;
+                    }
+                    else
+                    {
+                        accuracyStyle.normal.textColor = Defines.greatColor;
+                    }
+                }
             }
         }
 

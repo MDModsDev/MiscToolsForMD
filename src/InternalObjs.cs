@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using UnityEngine;
 
 namespace MiscToolsForMD
 {
@@ -83,6 +84,9 @@ namespace MiscToolsForMD
         };
 
         public static readonly string configPath = "UserData" + Path.DirectorySeparatorChar + "MiscToolsForMD.json";
+        public static readonly Color apColor = new(255 / 256f, 215 / 256f, 0 / 256f);
+        public static readonly Color greatColor = new(87 / 256f, 250 / 256f, 255 / 256f);
+        public static readonly Color missColor = Color.white;
     }
 
     public class Config

@@ -111,6 +111,7 @@ namespace MiscToolsForMD
         {
             List<string> keys = new();
             string text;
+            // See Assets.Scripts.GameCore.Controller.StandloneController.GetDefaultKeyList
             if (PlayerPrefs.HasKey("Controller"))
             {
                 text = Singleton<ConfigManager>.instance.GetString("Controller");
