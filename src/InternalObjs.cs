@@ -85,7 +85,7 @@ namespace MiscToolsForMD
 
         public static readonly string configPath = "UserData" + Path.DirectorySeparatorChar + "MiscToolsForMD.json";
         public static readonly Color apColor = new(255 / 256f, 215 / 256f, 0 / 256f);
-        public static readonly Color greatColor = new(87 / 256f, 250 / 256f, 255 / 256f);
+        public static readonly Color greatColor = new(65 / 256f, 105 / 256f, 225 / 256f);
         public static readonly Color missColor = Color.white;
     }
 
