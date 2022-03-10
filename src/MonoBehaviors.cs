@@ -2,6 +2,7 @@
 using Assets.Scripts.GameCore.HostComponent;
 using Assets.Scripts.PeroTools.Commons;
 using Assets.Scripts.PeroTools.Managers;
+using FormulaBase;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -31,6 +32,7 @@ namespace MiscToolsForMD
 
         public int actualWeight = 0;
         public int targetWeight = 0;
+        public bool isMiss = false;
         private List<Lyric> lyrics;
 
         public Indicator(IntPtr intPtr) : base(intPtr)
@@ -82,6 +84,7 @@ namespace MiscToolsForMD
                 windowRect = new Rect(MiscToolsForMDMod.config.x, MiscToolsForMDMod.config.y, MiscToolsForMDMod.config.width, MiscToolsForMDMod.config.height);
                 actualWeight = 0;
                 targetWeight = 0;
+                isMiss = false;
             }
             if (MiscToolsForMDMod.config.lyric)
             {
@@ -130,7 +133,8 @@ namespace MiscToolsForMD
                 }
                 if (!successGetLyric || lyrics.Count == 0)
                 {
-                    MiscToolsForMDMod.instance.LoggerInstance.Error("No available lyric.");
+                    MiscToolsForMDMod.config.lyric = false;
+                    MiscToolsForMDMod.instance.LoggerInstance.Error("No available lyric. We will disable lyric displaying.");
                 }
                 lyricWindowRect = new Rect(MiscToolsForMDMod.config.lyric_x, MiscToolsForMDMod.config.lyric_y, MiscToolsForMDMod.config.lyric_width, MiscToolsForMDMod.config.lyric_height);
                 lyricContent = "";
@@ -223,7 +227,7 @@ namespace MiscToolsForMD
                 accuracyText = "Accuracy: " + acc.ToString("P");
                 if (acc < 1f)
                 {
-                    if (Singleton<TaskStageTarget>.instance.GetMiss() > 0)
+                    if (isMiss || (Singleton<TaskStageTarget>.instance.GetMiss() > 0))
                     {
                         accuracyStyle.normal.textColor = Defines.missColor;
                     }
@@ -237,11 +241,14 @@ namespace MiscToolsForMD
 
         private void AddKeyCount(string actKey, uint num = 1)
         {
-            foreach (string workingKey in workingKeys)
+            if (Singleton<StageBattleComponent>.instance.isInGame)
             {
-                if (workingKey == actKey)
+                foreach (string workingKey in workingKeys)
                 {
-                    counters[workingKey] += num;
+                    if (workingKey == actKey)
+                    {
+                        counters[workingKey] += num;
+                    }
                 }
             }
         }

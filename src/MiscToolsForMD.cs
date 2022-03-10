@@ -2,6 +2,8 @@
 using Assets.Scripts.GameCore.HostComponent;
 using Assets.Scripts.PeroTools.Commons;
 using Assets.Scripts.PeroTools.Managers;
+using FormulaBase;
+using GameLogic;
 using HarmonyLib;
 using MelonLoader;
 using Newtonsoft.Json;
@@ -20,6 +22,7 @@ namespace MiscToolsForMD
         public static Config config;
         public static MiscToolsForMDMod instance;
         public static Indicator indicator;
+        private bool canFix = true;
 
         public override void OnApplicationLateStart()
         {
@@ -49,6 +52,12 @@ namespace MiscToolsForMD
                 MethodInfo addCount = typeof(TaskStageTarget).GetMethod("AddCount");
                 MethodInfo addCountPatch = typeof(MiscToolsForMDMod).GetMethod(nameof(AddCount), BindingFlags.Static | BindingFlags.NonPublic);
                 HarmonyInstance.Patch(addCount, null, new HarmonyMethod(addCountPatch));
+                MethodInfo addComboMiss = typeof(TaskStageTarget).GetMethod("AddComboMiss");
+                MethodInfo addComboMissPatch = typeof(MiscToolsForMDMod).GetMethod(nameof(AddComboMiss), BindingFlags.Static | BindingFlags.NonPublic);
+                HarmonyInstance.Patch(addComboMiss, null, new HarmonyMethod(addComboMissPatch));
+                MethodInfo setPlayResult = typeof(TaskStageTarget).GetMethod("SetPlayResult");
+                MethodInfo setPlayResultPatch = typeof(MiscToolsForMDMod).GetMethod(nameof(SetPlayResult), BindingFlags.Static | BindingFlags.NonPublic);
+                HarmonyInstance.Patch(setPlayResult, null, new HarmonyMethod(setPlayResultPatch));
             }
             if (config.lyric)
             {
@@ -60,8 +69,35 @@ namespace MiscToolsForMD
             LoggerInstance.Msg("MiscToolsForMD Loads Completed.");
         }
 
+        private static void SetPlayResult(int idx, uint result, bool isMulEnd)
+        {
+            MusicData musicData = Singleton<StageBattleComponent>.instance.GetMusicDataByIdx(idx);
+            if (musicData != null && !musicData.isLongPressing && !musicData.noteData.addCombo)
+            {
+                indicator.targetWeight += 1;
+                if (result == (uint)TaskResult.Prefect)
+                {
+                    indicator.actualWeight += 1;
+                }
+                indicator.UpdateAccuracy();
+            }
+            instance.Log("idx:" + idx + ";result:" + result + ";isMulEnd:" + isMulEnd);
+        }
+
+        private static void AddComboMiss(int value)
+        {
+            if (instance.canFix)
+            {
+                indicator.targetWeight += 2 * value;
+                indicator.isMiss = true;
+                indicator.UpdateAccuracy();
+            }
+            instance.Log("value:" + value);
+        }
+
         private static void AddCount(uint result, int value)
         {
+            instance.canFix = false;
             if (value == 1)
             {
                 indicator.targetWeight += 2;
@@ -86,6 +122,7 @@ namespace MiscToolsForMD
                     indicator.actualWeight += 4;
                 }
             }
+            instance.canFix = true;
             indicator.UpdateAccuracy();
             instance.Log("result:" + result + ";value:" + value + ";targetWeight:" + indicator.targetWeight + ";actualWeight:" + indicator.actualWeight);
         }
