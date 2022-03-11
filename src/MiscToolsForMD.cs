@@ -49,9 +49,6 @@ namespace MiscToolsForMD
             }
             if (config.ap_indicator)
             {
-                MethodInfo addCount = typeof(TaskStageTarget).GetMethod("AddCount");
-                MethodInfo addCountPatch = typeof(MiscToolsForMDMod).GetMethod(nameof(AddCount), BindingFlags.Static | BindingFlags.NonPublic);
-                HarmonyInstance.Patch(addCount, null, new HarmonyMethod(addCountPatch));
                 MethodInfo addComboMiss = typeof(TaskStageTarget).GetMethod("AddComboMiss");
                 MethodInfo addComboMissPatch = typeof(MiscToolsForMDMod).GetMethod(nameof(AddComboMiss), BindingFlags.Static | BindingFlags.NonPublic);
                 HarmonyInstance.Patch(addComboMiss, null, new HarmonyMethod(addComboMissPatch));
@@ -71,17 +68,82 @@ namespace MiscToolsForMD
 
         private static void SetPlayResult(int idx, uint result, bool isMulEnd)
         {
+            // See Assets.Scripts.GameCore.HostComponent.TaskStageTarget.GetTrueAccuracyNew
+            // and Assets.Scripts.GameCore.HostComponent.TaskStageTarget.SetPlayResult
+            if (result <= 0U)
+            {
+                return;
+            }
             MusicData musicData = Singleton<StageBattleComponent>.instance.GetMusicDataByIdx(idx);
-            if (musicData != null && !musicData.isLongPressing && !musicData.noteData.addCombo)
+            TaskResult playResult = (TaskResult)Singleton<BattleEnemyManager>.instance.GetPlayResult(idx);
+            if (musicData.isLongPressing)
+            {
+                return;
+            }
+            instance.canFix = false;
+            if (!musicData.noteData.addCombo)
             {
                 indicator.targetWeight += 1;
                 if (result == (uint)TaskResult.Prefect)
                 {
                     indicator.actualWeight += 1;
                 }
-                indicator.UpdateAccuracy();
+                instance.Log("Notes which doesn't add combo captured.");
             }
-            instance.Log("idx:" + idx + ";result:" + result + ";isMulEnd:" + isMulEnd);
+            else if (musicData.isLongPressEnd || musicData.isLongPressStart)
+            {
+                instance.Log("LongPressStart/End captured.");
+                indicator.targetWeight += 2;
+                if (result == (uint)TaskResult.Prefect)
+                {
+                    indicator.actualWeight += 2;
+                }
+                else if (result == (uint)TaskResult.Great)
+                {
+                    indicator.actualWeight += 1;
+                }
+            }
+            else if (playResult == TaskResult.None || isMulEnd || musicData.doubleIdx > 0)
+            {
+                if (musicData.isDouble)
+                {
+                    byte playResult2 = Singleton<BattleEnemyManager>.instance.GetPlayResult(musicData.doubleIdx);
+                    if (playResult2 == (byte)TaskResult.None)
+                    {
+                        instance.Log("Current is first note of a double-press group.");
+                    }
+                    else
+                    {
+                        indicator.targetWeight += 4;
+                        if ((playResult2 == (byte)TaskResult.Prefect && result == (uint)TaskResult.Great) || (playResult2 == (byte)TaskResult.Great && result == (uint)TaskResult.Prefect) || (playResult2 == (byte)TaskResult.Great && result == (uint)TaskResult.Great))
+                        {
+                            indicator.actualWeight += 2;
+                        }
+                        else if (result == (uint)TaskResult.Prefect && playResult2 == (byte)TaskResult.Prefect)
+                        {
+                            indicator.actualWeight += 4;
+                        }
+                        instance.Log("Current is second note of a double-press group.");
+                    }
+                    instance.Log("Double-Press captured.");
+                }
+                else
+                {
+                    indicator.targetWeight += 2;
+                    if (result == (uint)TaskResult.Prefect)
+                    {
+                        indicator.actualWeight += 2;
+                    }
+                    else if (result == (uint)TaskResult.Great)
+                    {
+                        indicator.actualWeight += 1;
+                    }
+                    instance.Log("Normal note captured.");
+                }
+            }
+            indicator.UpdateAccuracy();
+            instance.canFix = true;
+            instance.Log("idx:" + idx + ";result:" + result + ";isMulEnd:" + isMulEnd + ";targetWeight:" + indicator.targetWeight + ";actualWeight:" + indicator.actualWeight);
         }
 
         private static void AddComboMiss(int value)
@@ -91,40 +153,9 @@ namespace MiscToolsForMD
                 indicator.targetWeight += 2 * value;
                 indicator.isMiss = true;
                 indicator.UpdateAccuracy();
+                instance.Log("Player misses note without contact was captured.");
             }
-            instance.Log("value:" + value);
-        }
-
-        private static void AddCount(uint result, int value)
-        {
-            instance.canFix = false;
-            if (value == 1)
-            {
-                indicator.targetWeight += 2;
-                if (result == (uint)TaskResult.Great)
-                {
-                    indicator.actualWeight += 1;
-                }
-                else if (result == (uint)TaskResult.Prefect)
-                {
-                    indicator.actualWeight += 2;
-                }
-            }
-            else if (value == 2)
-            {
-                indicator.targetWeight += 4;
-                if (result == (uint)TaskResult.Great)
-                {
-                    indicator.actualWeight += 2;
-                }
-                else if (result == (uint)TaskResult.Prefect)
-                {
-                    indicator.actualWeight += 4;
-                }
-            }
-            instance.canFix = true;
-            indicator.UpdateAccuracy();
-            instance.Log("result:" + result + ";value:" + value + ";targetWeight:" + indicator.targetWeight + ";actualWeight:" + indicator.actualWeight);
+            instance.Log("value:" + value + ";targetWeight:" + indicator.targetWeight + ";actualWeight:" + indicator.actualWeight);
         }
 
         private static void InitUI()

@@ -159,7 +159,7 @@ namespace MiscToolsForMD
             }
             if (MiscToolsForMDMod.config.lyric)
             {
-                float time = Singleton<FormulaBase.StageBattleComponent>.instance.timeFromMusicStart;
+                float time = Singleton<StageBattleComponent>.instance.timeFromMusicStart;
                 lyricContent = Lyric.GetLyricByTime(lyrics, time).content;
             }
         }
@@ -235,6 +235,10 @@ namespace MiscToolsForMD
                     {
                         accuracyStyle.normal.textColor = Defines.greatColor;
                     }
+                }
+                else if (acc == 1f)
+                {
+                    accuracyStyle.normal.textColor = Defines.apColor;
                 }
             }
         }
