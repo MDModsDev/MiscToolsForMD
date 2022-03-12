@@ -76,21 +76,12 @@ namespace MiscToolsForMD
             }
             MusicData musicData = Singleton<StageBattleComponent>.instance.GetMusicDataByIdx(idx);
             TaskResult playResult = (TaskResult)Singleton<BattleEnemyManager>.instance.GetPlayResult(idx);
-            if (musicData.isLongPressing)
+            if (musicData.isLongPressing || !musicData.noteData.addCombo)
             {
                 return;
             }
             instance.canFix = false;
-            if (!musicData.noteData.addCombo)
-            {
-                indicator.targetWeight += 1;
-                if (result == (uint)TaskResult.Prefect)
-                {
-                    indicator.actualWeight += 1;
-                }
-                instance.Log("Notes which doesn't add combo captured.");
-            }
-            else if (musicData.isLongPressEnd || musicData.isLongPressStart)
+            if (musicData.isLongPressEnd || musicData.isLongPressStart)
             {
                 instance.Log("LongPressStart/End captured.");
                 indicator.targetWeight += 2;
@@ -173,6 +164,41 @@ namespace MiscToolsForMD
             }
             indicator = ui.AddComponent<Indicator>();
             instance.Log("Created UI");
+        }
+
+        private static int GetCurrentTargetWeightInGame(int idx)
+        {
+            // See Assets.Scripts.GameCore.HostComponent.TaskStageTarget.GetTrueAccuracyNew
+            Il2CppSystem.Collections.Generic.List<MusicData> musicDatas = Singleton<StageBattleComponent>.instance.GetMusicData();
+            List<MusicData> validMusicDatas = new();
+            int num;
+            if (idx < 0 || idx >= musicDatas.Count)
+            {
+                num = musicDatas.Count - 1;
+            }
+            else
+            {
+                num = idx;
+            }
+            for (int i = 0; i <= num; i++)
+            {
+                validMusicDatas.Add(musicDatas[i]);
+            }
+            int touchNum = validMusicDatas.Count(musicData => musicData.noteData.type == (uint)NoteType.Hp || musicData.noteData.type == (uint)NoteType.Music);
+            int normalNum = validMusicDatas.Count(musicData => musicData.noteData.addCombo && !musicData.isLongPressing);
+            int blockNum = validMusicDatas.Count(musicData => musicData.noteData.type == (uint)NoteType.Block);
+            return (touchNum + normalNum + blockNum) * 2;
+        }
+
+        private static int GetCurrentActualWeightInGame()
+        {
+            // See Assets.Scripts.GameCore.HostComponent.TaskStageTarget.GetTrueAccuracyNew
+            TaskStageTarget targetInstance = Singleton<TaskStageTarget>.instance;
+            int actualTouchNum = targetInstance.GetCountValue(TaskCount.Music) + targetInstance.GetCountValue(TaskCount.Energy) + targetInstance.GetCountValue(TaskCount.TouhouRedPoint);
+            int actualPerfectNum = targetInstance.GetHitCountByResult(TaskResult.Prefect);
+            int actualGreatNum = targetInstance.GetHitCountByResult(TaskResult.Great);
+            int actualBlockNum = targetInstance.GetCountValue(TaskCount.Block);
+            return actualTouchNum * 2 + actualPerfectNum * 2 + actualGreatNum + actualBlockNum * 2;
         }
 
         public static List<string> GetControlKeys()
