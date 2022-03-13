@@ -70,20 +70,28 @@ namespace MiscToolsForMD
         {
             // See Assets.Scripts.GameCore.HostComponent.TaskStageTarget.GetTrueAccuracyNew
             // and Assets.Scripts.GameCore.HostComponent.TaskStageTarget.SetPlayResult
-            if (result <= 0U)
+            if (result <= 0U || indicator.cache.IsIdRecorded(idx))
             {
                 return;
             }
             MusicData musicData = Singleton<StageBattleComponent>.instance.GetMusicDataByIdx(idx);
             TaskResult playResult = (TaskResult)Singleton<BattleEnemyManager>.instance.GetPlayResult(idx);
-            if (musicData.isLongPressing || !musicData.noteData.addCombo)
+            if (musicData.isLongPressing)
             {
                 return;
             }
             instance.canFix = false;
-            if (musicData.isLongPressEnd || musicData.isLongPressStart)
+            if (!musicData.noteData.addCombo)
             {
-                instance.Log("LongPressStart/End captured.");
+                indicator.targetWeight += 2;
+                if (result == (uint)TaskResult.Prefect)
+                {
+                    indicator.actualWeight += 2;
+                }
+                instance.Log("Note which doesn't add combo captured.");
+            }
+            else if (musicData.isLongPressEnd || musicData.isLongPressStart)
+            {
                 indicator.targetWeight += 2;
                 if (result == (uint)TaskResult.Prefect)
                 {
@@ -93,6 +101,7 @@ namespace MiscToolsForMD
                 {
                     indicator.actualWeight += 1;
                 }
+                instance.Log("LongPressStart/End captured.");
             }
             else if (playResult == TaskResult.None || isMulEnd || musicData.doubleIdx > 0)
             {
@@ -132,9 +141,14 @@ namespace MiscToolsForMD
                     instance.Log("Normal note captured.");
                 }
             }
+            indicator.actualWeightInGame = GetCurrentActualWeightInGame();
+            indicator.targetWeightInGame = GetCurrentTargetWeightInGame(idx);
             indicator.UpdateAccuracy();
+            indicator.cache.AddRecordedId(idx);
             instance.canFix = true;
-            instance.Log("idx:" + idx + ";result:" + result + ";isMulEnd:" + isMulEnd + ";targetWeight:" + indicator.targetWeight + ";actualWeight:" + indicator.actualWeight);
+            instance.Log("idx:" + idx + ";result:" + result + ";isMulEnd:" + isMulEnd);
+            instance.Log("targetWeight:" + indicator.targetWeight + ";actualWeight:" + indicator.actualWeight);
+            instance.Log("targetWeightInGame:" + indicator.targetWeightInGame + ";actualWeightInGame:" + indicator.actualWeightInGame);
         }
 
         private static void AddComboMiss(int value)
@@ -169,21 +183,7 @@ namespace MiscToolsForMD
         private static int GetCurrentTargetWeightInGame(int idx)
         {
             // See Assets.Scripts.GameCore.HostComponent.TaskStageTarget.GetTrueAccuracyNew
-            Il2CppSystem.Collections.Generic.List<MusicData> musicDatas = Singleton<StageBattleComponent>.instance.GetMusicData();
-            List<MusicData> validMusicDatas = new();
-            int num;
-            if (idx < 0 || idx >= musicDatas.Count)
-            {
-                num = musicDatas.Count - 1;
-            }
-            else
-            {
-                num = idx;
-            }
-            for (int i = 0; i <= num; i++)
-            {
-                validMusicDatas.Add(musicDatas[i]);
-            }
+            List<MusicData> validMusicDatas = indicator.cache.GetAllMusicDatasBeforeId(idx);
             int touchNum = validMusicDatas.Count(musicData => musicData.noteData.type == (uint)NoteType.Hp || musicData.noteData.type == (uint)NoteType.Music);
             int normalNum = validMusicDatas.Count(musicData => musicData.noteData.addCombo && !musicData.isLongPressing);
             int blockNum = validMusicDatas.Count(musicData => musicData.noteData.type == (uint)NoteType.Block);

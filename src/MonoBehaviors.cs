@@ -32,7 +32,10 @@ namespace MiscToolsForMD
 
         public int actualWeight = 0;
         public int targetWeight = 0;
+        public int actualWeightInGame = 0;
+        public int targetWeightInGame = 0;
         public bool isMiss = false;
+        public Cache cache = new();
         private List<Lyric> lyrics;
 
         public Indicator(IntPtr intPtr) : base(intPtr)
@@ -84,7 +87,11 @@ namespace MiscToolsForMD
                 windowRect = new Rect(MiscToolsForMDMod.config.x, MiscToolsForMDMod.config.y, MiscToolsForMDMod.config.width, MiscToolsForMDMod.config.height);
                 actualWeight = 0;
                 targetWeight = 0;
+                actualWeightInGame = 0;
+                targetWeightInGame = 0;
                 isMiss = false;
+                cache = new();
+                cache.CleanCache();
             }
             if (MiscToolsForMDMod.config.lyric)
             {
@@ -218,6 +225,8 @@ namespace MiscToolsForMD
             {
                 float unit = 0.0001f;
                 float trueAcc = actualWeight * 1.0f / targetWeight;
+                float trueAccInGame = actualWeightInGame * 1.0f / targetWeightInGame;
+                MiscToolsForMDMod.instance.Log("trueAcc:" + trueAcc + ";trueAccInGame:" + trueAccInGame);
                 float acc = Mathf.RoundToInt(trueAcc / unit) * unit;
                 // See Assets.Scripts.GameCore.HostComponent.TaskStageTarget.GetAccuracy
                 if (trueAcc < acc && (acc == 0.6f || acc == 0.7f || acc == 0.8f || acc == 0.9f || acc == 1.0f))

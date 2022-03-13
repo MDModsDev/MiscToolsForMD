@@ -1,4 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using Assets.Scripts.PeroTools.Commons;
+using FormulaBase;
+using GameLogic;
+using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
@@ -87,6 +90,52 @@ namespace MiscToolsForMD
         public static readonly Color apColor = new(255 / 256f, 215 / 256f, 0 / 256f);
         public static readonly Color greatColor = new(65 / 256f, 105 / 256f, 225 / 256f);
         public static readonly Color missColor = Color.white;
+    }
+
+    public class Cache
+    {
+        private readonly List<int> recordedIds = new();
+        private readonly List<MusicData> musicList = new();
+        private int lastId = 0;
+        private Il2CppSystem.Collections.Generic.List<MusicData> musicDatas;
+
+        public void CleanCache()
+        {
+            recordedIds.Clear();
+            musicList.Clear();
+            lastId = 0;
+            musicDatas = Singleton<StageBattleComponent>.instance.GetMusicData();
+        }
+
+        public void AddRecordedId(int id)
+        {
+            if (!IsIdRecorded(id))
+            {
+                recordedIds.Add(id);
+            }
+        }
+
+        public bool IsIdRecorded(int id)
+        {
+            return recordedIds.Contains(id);
+        }
+
+        public List<MusicData> GetAllMusicDatasBeforeId(int id)
+        {
+            if (id < 0 || id > musicDatas.Count)
+            {
+                id = musicDatas.Count - 1;
+            }
+            if (id >= lastId + 1)
+            {
+                for (int i = lastId + 1; i <= id; i++)
+                {
+                    musicList.Add(musicDatas[i]);
+                }
+                lastId = id;
+            }
+            return musicList;
+        }
     }
 
     public class Config
