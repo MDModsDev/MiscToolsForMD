@@ -15,5 +15,5 @@ using System.Runtime.InteropServices;
 
 // Melon Mod Info
 
-[assembly: MelonInfo(typeof(MiscToolsForMD.MiscToolsForMDMod), "MiscToolsForMDMod", "1.0.0", "MDModsDev", "https://github.com/MDModsDev/MiscToolsForMD")]
+[assembly: MelonInfo(typeof(MiscToolsForMD.MiscToolsForMDMod), "MiscToolsForMD", "1.0.0", "MDModsDev", "https://github.com/MDModsDev/MiscToolsForMD")]
 [assembly: MelonGame("PeroPeroGames", "MuseDash")]
