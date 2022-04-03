@@ -1,5 +1,6 @@
 ﻿using Assets.Scripts.GameCore.GamePlay;
 using Assets.Scripts.GameCore.HostComponent;
+using Assets.Scripts.GameCore.Managers;
 using Assets.Scripts.PeroTools.Commons;
 using Assets.Scripts.PeroTools.Managers;
 using FormulaBase;
@@ -22,7 +23,7 @@ namespace MiscToolsForMD
         public static Config config;
         public static MiscToolsForMDMod instance;
         public static Indicator indicator;
-        private bool canFix = true;
+        private bool isSettingPlayResult = false;
 
         public override void OnApplicationLateStart()
         {
@@ -39,7 +40,7 @@ namespace MiscToolsForMD
             LoggerInstance.Msg("Debug mode:" + config.debug);
             if (config.ap_indicator || config.key_indicator || config.lyric)
             {
-                MethodInfo start = typeof(GameOptimization).GetMethod("Init");
+                MethodInfo start = typeof(GameOptimization).GetMethod(nameof(GameOptimization.Init));
                 MethodInfo startPatch = typeof(MiscToolsForMDMod).GetMethod(nameof(InitUI), BindingFlags.Static | BindingFlags.NonPublic);
                 HarmonyInstance.Patch(start, null, new HarmonyMethod(startPatch));
             }
@@ -49,12 +50,12 @@ namespace MiscToolsForMD
             }
             if (config.ap_indicator)
             {
-                MethodInfo addComboMiss = typeof(TaskStageTarget).GetMethod("AddComboMiss");
-                MethodInfo addComboMissPatch = typeof(MiscToolsForMDMod).GetMethod(nameof(AddComboMiss), BindingFlags.Static | BindingFlags.NonPublic);
-                HarmonyInstance.Patch(addComboMiss, null, new HarmonyMethod(addComboMissPatch));
-                MethodInfo setPlayResult = typeof(TaskStageTarget).GetMethod("SetPlayResult");
+                MethodInfo setPlayResult = typeof(TaskStageTarget).GetMethod(nameof(TaskStageTarget.SetPlayResult));
                 MethodInfo setPlayResultPatch = typeof(MiscToolsForMDMod).GetMethod(nameof(SetPlayResult), BindingFlags.Static | BindingFlags.NonPublic);
                 HarmonyInstance.Patch(setPlayResult, null, new HarmonyMethod(setPlayResultPatch));
+                MethodInfo onNoteResult = typeof(StatisticsManager).GetMethod(nameof(StatisticsManager.OnNoteResult));
+                MethodInfo onNoteResultPatch = typeof(MiscToolsForMDMod).GetMethod(nameof(OnNoteResult), BindingFlags.Static | BindingFlags.NonPublic);
+                HarmonyInstance.Patch(onNoteResult, null, new HarmonyMethod(onNoteResultPatch));
             }
             if (config.lyric)
             {
@@ -70,7 +71,7 @@ namespace MiscToolsForMD
         {
             // See Assets.Scripts.GameCore.HostComponent.TaskStageTarget.GetTrueAccuracyNew
             // and Assets.Scripts.GameCore.HostComponent.TaskStageTarget.SetPlayResult
-            if (result <= 0U || indicator.cache.IsIdRecorded(idx))
+            if ((result <= (uint)TaskResult.None) || indicator.cache.IsIdRecorded(idx))
             {
                 return;
             }
@@ -80,7 +81,7 @@ namespace MiscToolsForMD
             {
                 return;
             }
-            instance.canFix = false;
+            instance.isSettingPlayResult = true;
             if (!musicData.noteData.addCombo)
             {
                 indicator.targetWeight += 2;
@@ -93,13 +94,19 @@ namespace MiscToolsForMD
             else if (musicData.isLongPressEnd || musicData.isLongPressStart)
             {
                 indicator.targetWeight += 2;
-                if (result == (uint)TaskResult.Prefect)
+                switch (result)
                 {
-                    indicator.actualWeight += 2;
-                }
-                else if (result == (uint)TaskResult.Great)
-                {
-                    indicator.actualWeight += 1;
+                    case (uint)TaskResult.Prefect:
+                        indicator.actualWeight += 2;
+                        break;
+
+                    case (uint)TaskResult.Great:
+                        indicator.actualWeight += 1;
+                        break;
+
+                    default:
+                        instance.Log("A LongPressStart/End note's result is TaskResult.None/TaskResult.Miss");
+                        break;
                 }
                 instance.Log("LongPressStart/End captured.");
             }
@@ -130,13 +137,27 @@ namespace MiscToolsForMD
                 else
                 {
                     indicator.targetWeight += 2;
-                    if (result == (uint)TaskResult.Prefect)
+                    switch (result)
                     {
-                        indicator.actualWeight += 2;
-                    }
-                    else if (result == (uint)TaskResult.Great)
-                    {
-                        indicator.actualWeight += 1;
+                        case (uint)TaskResult.Prefect:
+                            indicator.actualWeight += 2;
+                            break;
+
+                        case (uint)TaskResult.Great:
+                            indicator.actualWeight += 1;
+                            break;
+
+                        case (uint)TaskResult.Miss:
+                            if (musicData.noteData.type == (uint)NoteType.Hide)
+                            {
+                                indicator.isMiss = true;
+                                instance.Log("Ghost note is missed");
+                            }
+                            break;
+
+                        default:
+                            instance.Log("A normal note's result is TaskResult.None/TaskResult.Miss");
+                            break;
                     }
                     instance.Log("Normal note captured.");
                 }
@@ -145,22 +166,21 @@ namespace MiscToolsForMD
             indicator.targetWeightInGame = GetCurrentTargetWeightInGame(idx);
             indicator.UpdateAccuracy();
             indicator.cache.AddRecordedId(idx);
-            instance.canFix = true;
+            instance.isSettingPlayResult = false;
             instance.Log("idx:" + idx + ";result:" + result + ";isMulEnd:" + isMulEnd);
             instance.Log("targetWeight:" + indicator.targetWeight + ";actualWeight:" + indicator.actualWeight);
             instance.Log("targetWeightInGame:" + indicator.targetWeightInGame + ";actualWeightInGame:" + indicator.actualWeightInGame);
         }
 
-        private static void AddComboMiss(int value)
+        private static void OnNoteResult(int result)
         {
-            if (instance.canFix)
+            if (!instance.isSettingPlayResult && result == (int)TaskResult.None)
             {
-                indicator.targetWeight += 2 * value;
                 indicator.isMiss = true;
+                indicator.targetWeight += 2;
                 indicator.UpdateAccuracy();
-                instance.Log("Player misses note without contact was captured.");
+                instance.Log("Missing Heart/Note");
             }
-            instance.Log("value:" + value + ";targetWeight:" + indicator.targetWeight + ";actualWeight:" + indicator.actualWeight);
         }
 
         private static void InitUI()

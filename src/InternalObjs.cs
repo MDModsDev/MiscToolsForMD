@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace MiscToolsForMD
 {
-    public class Defines
+    internal class Defines
     {
         public static readonly Dictionary<string, string> keyDisplayNames = new()
         {
@@ -90,9 +90,11 @@ namespace MiscToolsForMD
         public static readonly Color apColor = new(255 / 256f, 215 / 256f, 0 / 256f);
         public static readonly Color greatColor = new(65 / 256f, 105 / 256f, 225 / 256f);
         public static readonly Color missColor = Color.white;
+        public static readonly Color errColor = Color.red;
+        public static readonly float indicatorSpacePixelSize = 20.0f;
     }
 
-    public class Cache
+    internal class Cache
     {
         private readonly List<int> recordedIds = new();
         private readonly List<MusicData> musicList = new();

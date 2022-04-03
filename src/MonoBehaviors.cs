@@ -35,7 +35,7 @@ namespace MiscToolsForMD
         public int actualWeightInGame = 0;
         public int targetWeightInGame = 0;
         public bool isMiss = false;
-        public Cache cache = new();
+        internal Cache cache = new();
         private List<Lyric> lyrics;
 
         public Indicator(IntPtr intPtr) : base(intPtr)
@@ -183,6 +183,7 @@ namespace MiscToolsForMD
             {
                 GUILayout.Label(accuracyText, accuracyStyle, null);
             }
+            GUILayout.Space(Defines.indicatorSpacePixelSize);
             if (MiscToolsForMDMod.config.key_indicator)
             {
                 GUILayout.BeginHorizontal(null);
@@ -234,7 +235,7 @@ namespace MiscToolsForMD
                     acc -= unit;
                 }
                 accuracyText = "Accuracy: " + acc.ToString("P");
-                if (acc < 1f)
+                if (acc < 1f && acc >= 0f)
                 {
                     if (isMiss || (Singleton<TaskStageTarget>.instance.GetMiss() > 0))
                     {
@@ -248,6 +249,10 @@ namespace MiscToolsForMD
                 else if (acc == 1f)
                 {
                     accuracyStyle.normal.textColor = Defines.apColor;
+                }
+                else
+                {
+                    accuracyStyle.normal.textColor = Defines.errColor;
                 }
             }
         }
