@@ -9,7 +9,9 @@ using HarmonyLib;
 using MelonLoader;
 using Newtonsoft.Json;
 using PeroPeroGames.GlobalDefines;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using UnhollowerRuntimeLib;
@@ -20,35 +22,47 @@ namespace MiscToolsForMD
     public class MiscToolsForMDMod : MelonMod
     {
         public List<ILyricSource> lyricSources = new();
+
         public static Config config;
         public static MiscToolsForMDMod instance;
         public static Indicator indicator;
-        private bool isSettingPlayResult = false;
+
+        private bool skipSetPlayResult = false;
+        private bool skipOnNoteResult = false;
 
         public override void OnApplicationLateStart()
         {
             if (System.IO.File.Exists(Defines.configPath))
             {
-                config = JsonConvert.DeserializeObject<Config>(System.IO.File.ReadAllText(Defines.configPath));
+                try
+                {
+                    config = JsonConvert.DeserializeObject<Config>(System.IO.File.ReadAllText(Defines.configPath));
+                }
+                catch (Exception ex)
+                {
+                    LoggerInstance.Error("Failed to load config:" + ex.Message + ", we will create default one instead.");
+                    config = new();
+                    SaveConfig();
+                }
             }
             else
             {
-                config = new Config();
+                config = new();
                 SaveConfig();
             }
             config.debug = config.debug || MelonDebug.IsEnabled();
             LoggerInstance.Msg("Debug mode:" + config.debug);
-            if (config.ap_indicator || config.key_indicator || config.lyric)
+            if (config.indicator.ap.enabled || config.indicator.key.enabled || config.lyric.enabled)
             {
                 MethodInfo start = typeof(GameOptimization).GetMethod(nameof(GameOptimization.Init));
-                MethodInfo startPatch = typeof(MiscToolsForMDMod).GetMethod(nameof(InitUI), BindingFlags.Static | BindingFlags.NonPublic);
+                MethodInfo startPatch = typeof(MiscToolsForMDMod).GetMethod(nameof(Init), BindingFlags.Static | BindingFlags.NonPublic);
                 HarmonyInstance.Patch(start, null, new HarmonyMethod(startPatch));
             }
             else
             {
                 LoggerInstance.Msg("Nothing was applied.");
             }
-            if (config.ap_indicator)
+            if (config.indicator.ap.enabled)
             {
                 MethodInfo setPlayResult = typeof(TaskStageTarget).GetMethod(nameof(TaskStageTarget.SetPlayResult));
                 MethodInfo setPlayResultPatch = typeof(MiscToolsForMDMod).GetMethod(nameof(SetPlayResult), BindingFlags.Static | BindingFlags.NonPublic);
@@ -56,8 +70,11 @@ namespace MiscToolsForMD
                 MethodInfo onNoteResult = typeof(StatisticsManager).GetMethod(nameof(StatisticsManager.OnNoteResult));
                 MethodInfo onNoteResultPatch = typeof(MiscToolsForMDMod).GetMethod(nameof(OnNoteResult), BindingFlags.Static | BindingFlags.NonPublic);
                 HarmonyInstance.Patch(onNoteResult, null, new HarmonyMethod(onNoteResultPatch));
+                MethodInfo addComboMiss = typeof(TaskStageTarget).GetMethod(nameof(TaskStageTarget.AddComboMiss));
+                MethodInfo addComboMissPatch = typeof(MiscToolsForMDMod).GetMethod(nameof(AddComboMiss), BindingFlags.Static | BindingFlags.NonPublic);
+                HarmonyInstance.Patch(addComboMiss, null, new HarmonyMethod(addComboMissPatch));
             }
-            if (config.lyric)
+            if (config.lyric.enabled)
             {
                 lyricSources.Add(new LocalSource());
                 // TODO: Load other lyric source
@@ -71,6 +88,13 @@ namespace MiscToolsForMD
         {
             // See Assets.Scripts.GameCore.HostComponent.TaskStageTarget.GetTrueAccuracyNew
             // and Assets.Scripts.GameCore.HostComponent.TaskStageTarget.SetPlayResult
+            // AddComboMiss -> SetPlayResult -> OnNoteResult
+            if (instance.skipSetPlayResult)
+            {
+                instance.skipSetPlayResult = false;
+                return;
+            }
+            instance.Log("idx:" + idx + ";result:" + result + ";isMulEnd:" + isMulEnd);
             if ((result <= (uint)TaskResult.None) || indicator.cache.IsIdRecorded(idx))
             {
                 return;
@@ -81,7 +105,6 @@ namespace MiscToolsForMD
             {
                 return;
             }
-            instance.isSettingPlayResult = true;
             if (!musicData.noteData.addCombo)
             {
                 indicator.targetWeight += 2;
@@ -151,12 +174,16 @@ namespace MiscToolsForMD
                             if (musicData.noteData.type == (uint)NoteType.Hide)
                             {
                                 indicator.isMiss = true;
-                                instance.Log("Ghost note is missed");
+                                instance.Log("A ghost note is missed");
+                            }
+                            else
+                            {
+                                instance.Log("A normal note is missed");
                             }
                             break;
 
                         default:
-                            instance.Log("A normal note's result is TaskResult.None/TaskResult.Miss");
+                            instance.Log("A normal note's result is TaskResult.None");
                             break;
                     }
                     instance.Log("Normal note captured.");
@@ -166,24 +193,42 @@ namespace MiscToolsForMD
             indicator.targetWeightInGame = GetCurrentTargetWeightInGame(idx);
             indicator.UpdateAccuracy();
             indicator.cache.AddRecordedId(idx);
-            instance.isSettingPlayResult = false;
-            instance.Log("idx:" + idx + ";result:" + result + ";isMulEnd:" + isMulEnd);
             instance.Log("targetWeight:" + indicator.targetWeight + ";actualWeight:" + indicator.actualWeight);
             instance.Log("targetWeightInGame:" + indicator.targetWeightInGame + ";actualWeightInGame:" + indicator.actualWeightInGame);
+            instance.skipOnNoteResult = true;
         }
 
         private static void OnNoteResult(int result)
         {
-            if (!instance.isSettingPlayResult && result == (int)TaskResult.None)
+            if (instance.skipOnNoteResult)
+            {
+                instance.skipOnNoteResult = false;
+                return;
+            }
+            instance.Log("result:" + result);
+            if (result == (int)TaskResult.None)
             {
                 indicator.isMiss = true;
                 indicator.targetWeight += 2;
                 indicator.UpdateAccuracy();
-                instance.Log("Missing Heart/Note");
+                instance.Log("Missing Heart/Music");
             }
         }
 
-        private static void InitUI()
+        private static void AddComboMiss(int value)
+        {
+            instance.Log("value:" + value);
+            if (value == 1)
+            {
+                indicator.isMiss = true;
+                indicator.targetWeight += 2;
+                indicator.UpdateAccuracy();
+                instance.skipSetPlayResult = true;
+                instance.Log("Missing normal note.");
+            }
+        }
+
+        private static void Init()
         {
             ClassInjector.RegisterTypeInIl2Cpp<Indicator>();
             GameObject ui = GameObject.Find("MiscToolsUI");
@@ -248,13 +293,15 @@ namespace MiscToolsForMD
 
         public void Log(object log, object normalLog = null)
         {
+            StackTrace trace = new();
+            string callerName = "[" + trace.GetFrame(1).GetMethod().Name + "] ";
             if (config.debug)
             {
-                LoggerInstance.Msg(log);
+                LoggerInstance.Msg(callerName + log);
             }
             else if (normalLog != null)
             {
-                LoggerInstance.Msg(normalLog);
+                LoggerInstance.Msg(callerName + normalLog);
             }
         }
 

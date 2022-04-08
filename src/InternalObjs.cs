@@ -124,6 +124,7 @@ namespace MiscToolsForMD
 
         public List<MusicData> GetAllMusicDatasBeforeId(int id)
         {
+            List<MusicData> result;
             if (id < 0 || id > musicDatas.Count)
             {
                 id = musicDatas.Count - 1;
@@ -134,26 +135,63 @@ namespace MiscToolsForMD
                 {
                     musicList.Add(musicDatas[i]);
                 }
-                lastId = id;
+                result = musicList;
             }
-            return musicList;
+            else
+            {
+                result = musicList.FindAll(musicData => musicList.IndexOf(musicData) <= id);
+            }
+            lastId = id;
+            return result;
         }
     }
 
     public class Config
     {
-        public bool ap_indicator = true;
-        public bool key_indicator = true;
-        public bool lyric = true;
         public bool debug = false;
-        public int width = 500;
-        public int height = 100;
+        public LyricConfig lyric = new();
+        public IndicatorConfig indicator = new();
+        public HardCoreConfig hardcore = new();
+        public SoftCoreConfig softcore = new();
+    }
+
+    public class LyricConfig
+    {
+        public bool enabled = true;
         public int x = -1;
         public int y = -1;
-        public int lyric_x = -1;
-        public int lyric_y = -1;
-        public int lyric_width = 500;
-        public int lyric_height = 100;
+        public int width = 500;
+        public int height = 100;
+    }
+
+    public class IndicatorConfig
+    {
+        public APIndicatorConfig ap = new();
+        public KeyIndicatorConfig key = new();
+        public int x = -1;
+        public int y = -1;
+        public int width = 500;
+        public int height = 100;
+    }
+
+    public class APIndicatorConfig
+    {
+        public bool enabled = true;
+    }
+
+    public class KeyIndicatorConfig
+    {
+        public bool enabled = true;
+    }
+
+    public class HardCoreConfig
+    {
+        public bool enabled = false;
+    }
+
+    public class SoftCoreConfig
+    {
+        public bool enabled = false;
     }
 
     public class KeyConfigObj
