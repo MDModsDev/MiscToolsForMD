@@ -3,8 +3,10 @@ using Assets.Scripts.GameCore.HostComponent;
 using Assets.Scripts.PeroTools.Commons;
 using Assets.Scripts.PeroTools.Managers;
 using FormulaBase;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace MiscToolsForMD
@@ -12,31 +14,19 @@ namespace MiscToolsForMD
     public class Indicator : MonoBehaviour
     {
         private readonly Dictionary<string, string> keyDisplayNames = Defines.keyDisplayNames;
+        private readonly List<KeyInfo> keyInfos = new();
         private Rect windowRect = new(MiscToolsForMDMod.config.indicator.x, MiscToolsForMDMod.config.indicator.y, MiscToolsForMDMod.config.indicator.width, MiscToolsForMDMod.config.indicator.height);
-        private string accuracyText, lyricContent;
-        private List<string> workingKeys;
-        private Dictionary<string, uint> counters;
         private Rect lyricWindowRect = new(MiscToolsForMDMod.config.lyric.x, MiscToolsForMDMod.config.lyric.y, MiscToolsForMDMod.config.lyric.width, MiscToolsForMDMod.config.lyric.height);
-
-        private readonly GUIStyle accuracyStyle = new()
-        {
-            alignment = TextAnchor.MiddleCenter,
-            fontSize = 48
-        };
-
-        private readonly GUIStyle keyStyle = new()
-        {
-            alignment = TextAnchor.MiddleCenter,
-            fontSize = 24
-        };
-
-        public int actualWeight = 0;
-        public int targetWeight = 0;
-        public int actualWeightInGame = 0;
-        public int targetWeightInGame = 0;
-        public bool isMiss = false;
-        internal Cache cache = new();
+        private string accuracyText = "", lyricContent = "";
         private List<Lyric> lyrics;
+        private GUIStyle accuracyStyle, labelStyle, lyricStyle;
+        internal int actualWeight = 0;
+        internal int targetWeight = 0;
+        internal int actualWeightInGame = 0;
+        internal int targetWeightInGame = 0;
+        internal bool isMiss = false;
+        internal Cache cache = new();
+        internal Lang lang = Lang.GetLang();
 
         public Indicator(IntPtr intPtr) : base(intPtr)
         {
@@ -56,59 +46,91 @@ namespace MiscToolsForMD
 
         public void Start()
         {
-            bool needUpdateConfig = false;
+            cache.CleanCache();
             if (MiscToolsForMDMod.config.indicator.ap.enabled || MiscToolsForMDMod.config.indicator.key.enabled)
             {
                 if (MiscToolsForMDMod.config.indicator.x < 0)
                 {
                     MiscToolsForMDMod.config.indicator.x = (Screen.width - MiscToolsForMDMod.config.indicator.width) / 2;
-                    needUpdateConfig = true;
                 }
                 if (MiscToolsForMDMod.config.indicator.y < 0)
                 {
                     MiscToolsForMDMod.config.indicator.y = 20;
-                    needUpdateConfig = true;
                 }
-                accuracyText = "Accuracy: " + 1.ToString("P");
+                accuracyStyle = new()
+                {
+                    alignment = TextAnchor.MiddleCenter,
+                    fontSize = 48
+                };
+                lyricStyle = new()
+                {
+                    alignment = TextAnchor.MiddleCenter,
+                    fontSize = 48
+                };
+                labelStyle = new()
+                {
+                    alignment = TextAnchor.MiddleCenter,
+                    fontSize = 24
+                };
                 accuracyStyle.normal.textColor = Defines.apColor;
-                workingKeys = MiscToolsForMDMod.GetControlKeys();
-                counters = new Dictionary<string, uint>();
+                accuracyText = "Accuracy: " + 1.ToString("P");
+                List<string> workingKeys = GetControlKeys();
+                List<KeyCode> keyCodes = Enum.GetValues(typeof(KeyCode)).Cast<KeyCode>().ToList();
                 if (workingKeys.Count >= 3 && workingKeys.Count <= 9)
                 {
-                    foreach (string key in workingKeys)
+                    int controlKeysNum = workingKeys.Count / 2;
+                    keyInfos.Clear();
+                    for (int i = 0; i < workingKeys.Count; i++)
                     {
-                        counters.Add(key, 0);
+                        KeyInfo keyInfo = new()
+                        {
+                            code = keyCodes.Find(keyCode => keyCode.ToString() == workingKeys[i]),
+                            count = 0,
+                            style = new()
+                            {
+                                alignment = TextAnchor.MiddleCenter,
+                                fontSize = 24
+                            }
+                        };
+                        if (i < controlKeysNum)
+                        {
+                            keyInfo.type = ControlType.Air;
+                        }
+                        else if (i >= (workingKeys.Count - controlKeysNum) && i < (workingKeys.Count))
+                        {
+                            keyInfo.type = ControlType.Ground;
+                        }
+                        else
+                        {
+                            keyInfo.type = ControlType.Fever;
+                        }
+                        keyInfo.style.normal.textColor = Defines.displayColor;
+                        MiscToolsForMDMod.instance.Log("KeyInfo:" + keyInfo);
+                        keyInfos.Add(keyInfo);
+                        if (keyInfos.FindAll(keyInfo => keyInfo.type == ControlType.Fever).Count > 1)
+                        {
+                            MiscToolsForMDMod.instance.LoggerInstance.Warning("There seems to many Fever keys.");
+                        }
                     }
                 }
                 else
                 {
                     MiscToolsForMDMod.instance.LoggerInstance.Error("Unexcepted Keys List.");
                 }
-                windowRect = new Rect(MiscToolsForMDMod.config.indicator.x, MiscToolsForMDMod.config.indicator.y, MiscToolsForMDMod.config.indicator.width, MiscToolsForMDMod.config.indicator.height);
-                actualWeight = 0;
-                targetWeight = 0;
-                actualWeightInGame = 0;
-                targetWeightInGame = 0;
-                isMiss = false;
-                cache = new();
-                cache.CleanCache();
             }
+
             if (MiscToolsForMDMod.config.lyric.enabled)
             {
                 if (MiscToolsForMDMod.config.lyric.x < 0)
                 {
                     MiscToolsForMDMod.config.lyric.x = (Screen.width - MiscToolsForMDMod.config.lyric.width) / 2;
-                    needUpdateConfig = true;
                 }
+
                 if (MiscToolsForMDMod.config.lyric.y < 0)
                 {
                     MiscToolsForMDMod.config.lyric.y = Screen.height - MiscToolsForMDMod.config.lyric.height - 100;
-                    needUpdateConfig = true;
                 }
-                if (needUpdateConfig)
-                {
-                    MiscToolsForMDMod.instance.SaveConfig();
-                }
+
                 // See SetSelectedMusicNameTxt
                 string musicName, musicAuthor;
                 if (DataHelper.selectedAlbumUid != "collection" || DataHelper.selectedMusicIndex < 0)
@@ -147,8 +169,6 @@ namespace MiscToolsForMD
                     MiscToolsForMDMod.config.lyric.enabled = false;
                     MiscToolsForMDMod.instance.LoggerInstance.Error("No available lyric. We will disable lyric displaying.");
                 }
-                lyricWindowRect = new Rect(MiscToolsForMDMod.config.lyric.x, MiscToolsForMDMod.config.lyric.y, MiscToolsForMDMod.config.lyric.width, MiscToolsForMDMod.config.lyric.height);
-                lyricContent = "";
             }
         }
 
@@ -156,11 +176,17 @@ namespace MiscToolsForMD
         {
             if (MiscToolsForMDMod.config.indicator.key.enabled)
             {
-                foreach (string key in workingKeys)
+                for (int i = 0; i < keyInfos.Count; i++)
                 {
-                    if (Input.GetKeyDown(GetKeyCodeByName(key)))
+                    KeyInfo keyInfo = keyInfos[i];
+                    if (Input.GetKeyDown(keyInfo.code))
                     {
-                        AddKeyCount(key);
+                        AddKeyCount(keyInfo);
+                        SetKeyColor(keyInfo, Defines.pressingColor);
+                    }
+                    if (Input.GetKeyUp(keyInfo.code))
+                    {
+                        SetKeyColor(keyInfo, Defines.displayColor);
                     }
                 }
             }
@@ -174,50 +200,6 @@ namespace MiscToolsForMD
         public void OnDestroy()
         {
             MiscToolsForMDMod.indicator = null;
-        }
-
-        public void IndicatorWindow(int windowID)
-        {
-            GUILayout.BeginVertical(null);
-            if (MiscToolsForMDMod.config.indicator.ap.enabled)
-            {
-                GUILayout.Label(accuracyText, accuracyStyle, null);
-            }
-            GUILayout.Space(Defines.indicatorSpacePixelSize);
-            if (MiscToolsForMDMod.config.indicator.key.enabled)
-            {
-                GUILayout.BeginHorizontal(null);
-                foreach (string key in workingKeys)
-                {
-                    if (key != null)
-                    {
-                        string keyDisplayName;
-                        if (keyDisplayNames.ContainsKey(key))
-                        {
-                            keyDisplayName = keyDisplayNames[key];
-                        }
-                        else
-                        {
-                            keyDisplayName = key;
-                        }
-                        GUILayout.Label(keyDisplayName + "\n\n" + counters[key], keyStyle, null);
-                    }
-                }
-                GUILayout.EndHorizontal();
-            }
-            GUILayout.EndVertical();
-        }
-
-        public void LyricWindow(int windowId)
-        {
-            GUIStyle lyricStyle = new()
-            {
-                alignment = TextAnchor.MiddleCenter,
-                fontSize = 48
-            };
-            GUILayout.BeginVertical(null);
-            GUILayout.Label(lyricContent, lyricStyle, null);
-            GUILayout.EndVertical();
         }
 
         public void UpdateAccuracy()
@@ -234,7 +216,7 @@ namespace MiscToolsForMD
                 {
                     acc -= unit;
                 }
-                accuracyText = "Accuracy: " + acc.ToString("P");
+                accuracyText = lang.localizedAccuracy + acc.ToString("P");
                 if (acc < 1f && acc >= 0f)
                 {
                     if (isMiss || (Singleton<TaskStageTarget>.instance.GetMiss() > 0))
@@ -257,30 +239,102 @@ namespace MiscToolsForMD
             }
         }
 
-        private void AddKeyCount(string actKey, uint num = 1)
+        private void IndicatorWindow(int windowId)
+        {
+            GUILayout.BeginVertical(null);
+            if (MiscToolsForMDMod.config.indicator.ap.enabled)
+            {
+                GUILayout.Label(accuracyText, accuracyStyle, null);
+                GUILayout.Space(20f);
+            }
+            GUILayout.FlexibleSpace();
+            if (MiscToolsForMDMod.config.indicator.key.enabled)
+            {
+                GUILayout.BeginHorizontal(null);
+                foreach (ControlType type in Enum.GetValues(typeof(ControlType)))
+                {
+                    List<KeyInfo> keyInfosByType = keyInfos.FindAll(keyInfo => keyInfo.type == type);
+                    if (keyInfosByType.Count > 0)
+                    {
+                        GUILayout.BeginVertical(null);
+                        GUILayout.Label(lang.localizedControlTypes[type], labelStyle, null);
+                        GUILayout.Space(10f);
+                        GUILayout.BeginHorizontal(null);
+                        foreach (KeyInfo keyInfoByType in keyInfosByType)
+                        {
+                            string keyDisplayName = keyInfoByType.code.ToString();
+                            if (keyDisplayNames.ContainsKey(keyDisplayName))
+                            {
+                                keyDisplayName = keyDisplayNames[keyDisplayName];
+                            }
+                            GUILayout.BeginVertical(null);
+                            GUILayout.Label(keyDisplayName, keyInfoByType.style, null);
+                            GUILayout.Space(10f);
+                            GUILayout.Label(keyInfoByType.count.ToString(), keyInfoByType.style, null);
+                            GUILayout.EndVertical();
+                        }
+                        GUILayout.EndHorizontal();
+                        GUILayout.EndVertical();
+                    }
+                }
+                GUILayout.EndHorizontal();
+            }
+            GUILayout.EndVertical();
+        }
+
+        private void LyricWindow(int windowId)
+        {
+            GUILayout.BeginVertical(null);
+            GUILayout.Label(lyricContent, lyricStyle, null);
+            GUILayout.EndVertical();
+        }
+
+        private void AddKeyCount(KeyInfo keyInfo, uint num = 1)
         {
             if (Singleton<StageBattleComponent>.instance.isInGame)
             {
-                foreach (string workingKey in workingKeys)
-                {
-                    if (workingKey == actKey)
-                    {
-                        counters[workingKey] += num;
-                    }
-                }
+                keyInfo.count += num;
             }
         }
 
-        private KeyCode GetKeyCodeByName(string name)
+        private void SetKeyColor(KeyInfo keyInfo, Color color)
         {
-            foreach (KeyCode code in Enum.GetValues(typeof(KeyCode)))
+            if (Singleton<StageBattleComponent>.instance.isInGame)
             {
-                if (code.ToString() == name)
+                keyInfo.style.normal.textColor = color;
+            }
+            else
+            {
+                keyInfo.style.normal.textColor = Defines.displayColor;
+            }
+        }
+
+        private List<string> GetControlKeys()
+        {
+            List<string> keys = new();
+            string text;
+            // See Assets.Scripts.GameCore.Controller.StandloneController.GetDefaultKeyList
+            if (PlayerPrefs.HasKey("Controller"))
+            {
+                text = Singleton<ConfigManager>.instance.GetString("Controller");
+            }
+            else
+            {
+                text = "{\"Keylist\":{ \"Custom\":[{\"Key\":\"None\",\"Type\":\"BattleAir\"},{\"Key\":\"None\",\"Type\":\"BattleAir\"},{\"Key\":\"None\",\"Type\":\"BattleAir\"},{\"Key\":\"None\",\"Type\":\"BattleAir\"},{\"Key\":\"None\",\"Type\":\"BattleGround\"},{\"Key\":\"None\",\"Type\":\"BattleGround\"},{\"Key\":\"None\",\"Type\":\"BattleGround\"},{\"Key\":\"None\",\"Type\":\"BattleGround\"}]},\"IsChanged\":\"false\",\"KeyBoardProposal\":\"Default\",\"HandleProposal\":\"Default\",\"IsVibration\":\"true\",\"FeverKey\":\"Space\"}";
+            }
+            KeyConfigObj keyConfig = JsonConvert.DeserializeObject<KeyConfigObj>(text);
+            foreach (KeyObj key in keyConfig.KeyList.Custom)
+            {
+                if (key.Key != "None")
                 {
-                    return code;
+                    keys.Add(key.Key);
                 }
             }
-            return KeyCode.None;
+            if (!DataHelper.isAutoFever && keyConfig.FeverKey != "None")
+            {
+                keys.Insert(keys.Count / 2, keyConfig.FeverKey);
+            }
+            return keys;
         }
     }
 }

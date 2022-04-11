@@ -2,7 +2,6 @@
 using Assets.Scripts.GameCore.HostComponent;
 using Assets.Scripts.GameCore.Managers;
 using Assets.Scripts.PeroTools.Commons;
-using Assets.Scripts.PeroTools.Managers;
 using FormulaBase;
 using GameLogic;
 using HarmonyLib;
@@ -12,6 +11,7 @@ using PeroPeroGames.GlobalDefines;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using UnhollowerRuntimeLib;
@@ -22,11 +22,9 @@ namespace MiscToolsForMD
     public class MiscToolsForMDMod : MelonMod
     {
         public List<ILyricSource> lyricSources = new();
-
         public static Config config;
         public static MiscToolsForMDMod instance;
         public static Indicator indicator;
-
         private bool skipSetPlayResult = false;
         private bool skipOnNoteResult = false;
 
@@ -36,7 +34,7 @@ namespace MiscToolsForMD
             {
                 try
                 {
-                    config = JsonConvert.DeserializeObject<Config>(System.IO.File.ReadAllText(Defines.configPath));
+                    config = JsonConvert.DeserializeObject<Config>(File.ReadAllText(Defines.configPath));
                 }
                 catch (Exception ex)
                 {
@@ -266,31 +264,6 @@ namespace MiscToolsForMD
             return actualTouchNum * 2 + actualPerfectNum * 2 + actualGreatNum + actualBlockNum * 2;
         }
 
-        public static List<string> GetControlKeys()
-        {
-            List<string> keys = new();
-            string text;
-            // See Assets.Scripts.GameCore.Controller.StandloneController.GetDefaultKeyList
-            if (PlayerPrefs.HasKey("Controller"))
-            {
-                text = Singleton<ConfigManager>.instance.GetString("Controller");
-            }
-            else
-            {
-                text = "{\"Keylist\":{ \"Custom\":[{\"Key\":\"None\",\"Type\":\"BattleAir\"},{\"Key\":\"None\",\"Type\":\"BattleAir\"},{\"Key\":\"None\",\"Type\":\"BattleAir\"},{\"Key\":\"None\",\"Type\":\"BattleAir\"},{\"Key\":\"None\",\"Type\":\"BattleGround\"},{\"Key\":\"None\",\"Type\":\"BattleGround\"},{\"Key\":\"None\",\"Type\":\"BattleGround\"},{\"Key\":\"None\",\"Type\":\"BattleGround\"}]},\"IsChanged\":\"false\",\"KeyBoardProposal\":\"Default\",\"HandleProposal\":\"Default\",\"IsVibration\":\"true\",\"FeverKey\":\"Space\"}";
-            }
-            KeyConfigObj keyConfig = JsonConvert.DeserializeObject<KeyConfigObj>(text);
-            foreach (KeyObj key in keyConfig.KeyList.Custom)
-            {
-                if (key.Key != "None")
-                {
-                    keys.Add(key.Key);
-                }
-            }
-            keys.Insert(keys.Count / 2, keyConfig.FeverKey);
-            return keys;
-        }
-
         public void Log(object log, object normalLog = null)
         {
             StackTrace trace = new();
@@ -307,7 +280,9 @@ namespace MiscToolsForMD
 
         public void SaveConfig()
         {
-            System.IO.File.WriteAllText(Defines.configPath, JsonConvert.SerializeObject(config, Formatting.Indented));
+            string jsonStr = JsonConvert.SerializeObject(config, Formatting.Indented);
+            Directory.CreateDirectory(Path.GetDirectoryName(Defines.configPath));
+            File.WriteAllText(Defines.configPath, jsonStr);
         }
     }
 }

@@ -86,12 +86,34 @@ namespace MiscToolsForMD
             { "Tilde", "~" }
         };
 
-        public static readonly string configPath = "UserData" + Path.DirectorySeparatorChar + "MiscToolsForMD.json";
+        public static readonly string configPath = Path.Combine("UserData", "MiscToolsForMD.json");
+        public static readonly string langPath = Path.Combine("UserData", "Lang", "MiscToolsForMD");
         public static readonly Color apColor = new(255 / 256f, 215 / 256f, 0 / 256f);
         public static readonly Color greatColor = new(65 / 256f, 105 / 256f, 225 / 256f);
         public static readonly Color missColor = Color.white;
         public static readonly Color errColor = Color.red;
-        public static readonly float indicatorSpacePixelSize = 20.0f;
+        public static readonly Color displayColor = Color.black;
+        public static readonly Color pressingColor = Color.white;
+    }
+
+    internal enum ControlType
+    {
+        Air,
+        Fever,
+        Ground
+    }
+
+    internal class KeyInfo
+    {
+        public ControlType type;
+        public uint count;
+        public KeyCode code;
+        public GUIStyle style;
+
+        public override string ToString()
+        {
+            return "type:" + type + ";code:" + code;
+        }
     }
 
     internal class Cache

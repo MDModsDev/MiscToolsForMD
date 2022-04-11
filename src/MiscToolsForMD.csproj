@@ -78,5 +78,15 @@
 			<Private>false</Private>
 			<HintPath>$(MelonLoader)\0Harmony.dll</HintPath>
 		</Reference>
+		<Reference Include="PeroTools2.Account">
+			<SpecificVersion>false</SpecificVersion>
+			<Private>false</Private>
+			<HintPath>$(MelonManaged)\PeroTools2.Account.dll</HintPath>
+		</Reference>
+		<Reference Include="Sirenix.Serialization">
+			<SpecificVersion>false</SpecificVersion>
+			<Private>false</Private>
+			<HintPath>$(MelonManaged)\Sirenix.Serialization.dll</HintPath>
+		</Reference>
 	</ItemGroup>
 </Project>
