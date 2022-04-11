@@ -216,7 +216,7 @@ namespace MiscToolsForMD
                 {
                     acc -= unit;
                 }
-                accuracyText = lang.localizedAccuracy + acc.ToString("P");
+                accuracyText = string.Format(lang.localizedAccuracy, acc);
                 if (acc < 1f && acc >= 0f)
                 {
                     if (isMiss || (Singleton<TaskStageTarget>.instance.GetMiss() > 0))

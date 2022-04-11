@@ -26,8 +26,8 @@ namespace MiscToolsForMD
             };
             lang.localizedAccuracy = language switch
             {
-                SystemLanguage.ChineseSimplified => "准确度：",
-                _ => "Accuracy:"
+                SystemLanguage.ChineseSimplified => "准确度：{0:P}",
+                _ => "Accuracy: {0:P}"
             };
             lang.localizedControlTypes = language switch
             {
