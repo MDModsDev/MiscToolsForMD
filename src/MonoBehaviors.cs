@@ -263,7 +263,7 @@ namespace MiscToolsForMD
                 trueAccInGame = actualWeightInGame * 1.0f / targetWeightInGame;
             }
             MiscToolsForMDMod.instance.Log("trueAccBySelf:" + trueAccBySelf + ";trueAccInGame:" + trueAccInGame);
-            float trueAcc = MiscToolsForMDMod.config.indicator.ap.manual ? trueAccInGame : trueAccBySelf;
+            float trueAcc = MiscToolsForMDMod.config.indicator.ap.manual ? trueAccBySelf : trueAccInGame;
             float acc = Mathf.RoundToInt(trueAcc / unit) * unit;
             // See Assets.Scripts.GameCore.HostComponent.TaskStageTarget.GetAccuracy
             if (trueAcc < acc && (acc == 0.6f || acc == 0.7f || acc == 0.8f || acc == 0.9f || acc == 1.0f))
