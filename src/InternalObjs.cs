@@ -87,13 +87,6 @@ namespace MiscToolsForMD
         };
 
         public static readonly string configPath = Path.Combine("UserData", "MiscToolsForMD.json");
-        public static readonly string langPath = Path.Combine("UserData", "Lang", "MiscToolsForMD");
-        public static readonly Color apColor = new(255 / 256f, 215 / 256f, 0 / 256f);
-        public static readonly Color greatColor = new(65 / 256f, 105 / 256f, 225 / 256f);
-        public static readonly Color missColor = Color.white;
-        public static readonly Color errColor = Color.red;
-        public static readonly Color displayColor = Color.black;
-        public static readonly Color pressingColor = Color.white;
     }
 
     internal enum ControlType
@@ -146,7 +139,6 @@ namespace MiscToolsForMD
 
         public List<MusicData> GetAllMusicDatasBeforeId(int id)
         {
-            List<MusicData> result;
             if (id < 0 || id > musicDatas.Count)
             {
                 id = musicDatas.Count - 1;
@@ -157,20 +149,16 @@ namespace MiscToolsForMD
                 {
                     musicList.Add(musicDatas[i]);
                 }
-                result = musicList;
+                lastId = id;
             }
-            else
-            {
-                result = musicList.FindAll(musicData => musicList.IndexOf(musicData) <= id);
-            }
-            lastId = id;
-            return result;
+            return musicList;
         }
     }
 
     public class Config
     {
         public bool debug = false;
+        public int size = 24;
         public LyricConfig lyric = new();
         public IndicatorConfig indicator = new();
         public HardCoreConfig hardcore = new();
@@ -180,6 +168,7 @@ namespace MiscToolsForMD
     public class LyricConfig
     {
         public bool enabled = true;
+        public int size = 36;
         public int x = -1;
         public int y = -1;
         public int width = 500;
@@ -199,11 +188,20 @@ namespace MiscToolsForMD
     public class APIndicatorConfig
     {
         public bool enabled = true;
+        public bool manual = false;
+        public int size = 36;
+        public string ap = "#FFD700";
+        public string great = "#4169E1";
+        public string miss = "#FFFFFF";
+        public string error = "#FF0000";
     }
 
     public class KeyIndicatorConfig
     {
         public bool enabled = true;
+        public int size = 24;
+        public string display = "#000000";
+        public string pressing = "#FFFFFF";
     }
 
     public class HardCoreConfig

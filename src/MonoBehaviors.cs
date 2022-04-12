@@ -15,11 +15,11 @@ namespace MiscToolsForMD
     {
         private readonly Dictionary<string, string> keyDisplayNames = Defines.keyDisplayNames;
         private readonly List<KeyInfo> keyInfos = new();
-        private Rect windowRect = new(MiscToolsForMDMod.config.indicator.x, MiscToolsForMDMod.config.indicator.y, MiscToolsForMDMod.config.indicator.width, MiscToolsForMDMod.config.indicator.height);
-        private Rect lyricWindowRect = new(MiscToolsForMDMod.config.lyric.x, MiscToolsForMDMod.config.lyric.y, MiscToolsForMDMod.config.lyric.width, MiscToolsForMDMod.config.lyric.height);
         private string accuracyText = "", lyricContent = "";
         private List<Lyric> lyrics;
+        private Rect windowRect, lyricWindowRect;
         private GUIStyle accuracyStyle, labelStyle, lyricStyle;
+        private Color32 apColor, displayColor, pressingColor, missColor, greatColor, errColor;
         internal int actualWeight = 0;
         internal int targetWeight = 0;
         internal int actualWeightInGame = 0;
@@ -30,18 +30,6 @@ namespace MiscToolsForMD
 
         public Indicator(IntPtr intPtr) : base(intPtr)
         {
-        }
-
-        public void OnGUI()
-        {
-            if (MiscToolsForMDMod.config.indicator.ap.enabled || MiscToolsForMDMod.config.indicator.key.enabled)
-            {
-                windowRect = GUILayout.Window(0, windowRect, (GUI.WindowFunction)IndicatorWindow, "MiscToolsUI", null);
-            }
-            if (MiscToolsForMDMod.config.lyric.enabled)
-            {
-                lyricWindowRect = GUILayout.Window(1, lyricWindowRect, (GUI.WindowFunction)LyricWindow, "Lyric", null);
-            }
         }
 
         public void Start()
@@ -57,23 +45,70 @@ namespace MiscToolsForMD
                 {
                     MiscToolsForMDMod.config.indicator.y = 20;
                 }
+                windowRect = new()
+                {
+                    x = MiscToolsForMDMod.config.indicator.x,
+                    y = MiscToolsForMDMod.config.indicator.y,
+                    width = MiscToolsForMDMod.config.indicator.width,
+                    height = MiscToolsForMDMod.config.indicator.height,
+                };
+                if (!ColorUtility.DoTryParseHtmlColor(MiscToolsForMDMod.config.indicator.ap.ap, out apColor))
+                {
+                    apColor = new()
+                    {
+                        r = (byte)(255 / 256f),
+                        g = (byte)(215 / 256f),
+                        b = (byte)(0 / 256f)
+                    };
+                    MiscToolsForMDMod.instance.Log("Failed to read apColor, use default instead");
+                }
+                if (!ColorUtility.DoTryParseHtmlColor(MiscToolsForMDMod.config.indicator.ap.great, out greatColor))
+                {
+                    greatColor = new()
+                    {
+                        r = (byte)(65 / 256f),
+                        g = (byte)(105 / 256f),
+                        b = (byte)(225 / 256f)
+                    };
+                    MiscToolsForMDMod.instance.Log("Failed to read greatColor, use default instead");
+                }
+                if (!ColorUtility.DoTryParseHtmlColor(MiscToolsForMDMod.config.indicator.ap.miss, out missColor))
+                {
+                    missColor = Color.white;
+                    MiscToolsForMDMod.instance.Log("Failed to read missColor, use default instead");
+                }
+                if (!ColorUtility.DoTryParseHtmlColor(MiscToolsForMDMod.config.indicator.ap.error, out errColor))
+                {
+                    errColor = Color.red;
+                    MiscToolsForMDMod.instance.Log("Failed to read errColor, use default instead");
+                }
+                if (!ColorUtility.DoTryParseHtmlColor(MiscToolsForMDMod.config.indicator.key.display, out displayColor))
+                {
+                    displayColor = Color.black;
+                    MiscToolsForMDMod.instance.Log("Failed to read displayColor, use default instead");
+                }
+                if (ColorUtility.DoTryParseHtmlColor(MiscToolsForMDMod.config.indicator.key.pressing, out pressingColor))
+                {
+                    pressingColor = Color.white;
+                    MiscToolsForMDMod.instance.Log("Failed to read pressingColor, use default instead");
+                }
                 accuracyStyle = new()
                 {
                     alignment = TextAnchor.MiddleCenter,
-                    fontSize = 48
+                    fontSize = MiscToolsForMDMod.config.indicator.ap.size
                 };
                 lyricStyle = new()
                 {
                     alignment = TextAnchor.MiddleCenter,
-                    fontSize = 48
+                    fontSize = MiscToolsForMDMod.config.lyric.size
                 };
                 labelStyle = new()
                 {
                     alignment = TextAnchor.MiddleCenter,
-                    fontSize = 24
+                    fontSize = MiscToolsForMDMod.config.size
                 };
-                accuracyStyle.normal.textColor = Defines.apColor;
-                accuracyText = "Accuracy: " + 1.ToString("P");
+                accuracyStyle.normal.textColor = apColor;
+                accuracyText = string.Format("{0:P}", 1);
                 List<string> workingKeys = GetControlKeys();
                 List<KeyCode> keyCodes = Enum.GetValues(typeof(KeyCode)).Cast<KeyCode>().ToList();
                 if (workingKeys.Count >= 3 && workingKeys.Count <= 9)
@@ -89,7 +124,7 @@ namespace MiscToolsForMD
                             style = new()
                             {
                                 alignment = TextAnchor.MiddleCenter,
-                                fontSize = 24
+                                fontSize = MiscToolsForMDMod.config.indicator.key.size
                             }
                         };
                         if (i < controlKeysNum)
@@ -104,7 +139,7 @@ namespace MiscToolsForMD
                         {
                             keyInfo.type = ControlType.Fever;
                         }
-                        keyInfo.style.normal.textColor = Defines.displayColor;
+                        keyInfo.style.normal.textColor = displayColor;
                         MiscToolsForMDMod.instance.Log("KeyInfo:" + keyInfo);
                         keyInfos.Add(keyInfo);
                         if (keyInfos.FindAll(keyInfo => keyInfo.type == ControlType.Fever).Count > 1)
@@ -130,7 +165,13 @@ namespace MiscToolsForMD
                 {
                     MiscToolsForMDMod.config.lyric.y = Screen.height - MiscToolsForMDMod.config.lyric.height - 100;
                 }
-
+                lyricWindowRect = new()
+                {
+                    x = MiscToolsForMDMod.config.lyric.x,
+                    y = MiscToolsForMDMod.config.lyric.y,
+                    height = MiscToolsForMDMod.config.lyric.height,
+                    width = MiscToolsForMDMod.config.lyric.width,
+                };
                 // See SetSelectedMusicNameTxt
                 string musicName, musicAuthor;
                 if (DataHelper.selectedAlbumUid != "collection" || DataHelper.selectedMusicIndex < 0)
@@ -182,11 +223,11 @@ namespace MiscToolsForMD
                     if (Input.GetKeyDown(keyInfo.code))
                     {
                         AddKeyCount(keyInfo);
-                        SetKeyColor(keyInfo, Defines.pressingColor);
+                        SetKeyColor(keyInfo, pressingColor);
                     }
                     if (Input.GetKeyUp(keyInfo.code))
                     {
-                        SetKeyColor(keyInfo, Defines.displayColor);
+                        SetKeyColor(keyInfo, displayColor);
                     }
                 }
             }
@@ -194,6 +235,18 @@ namespace MiscToolsForMD
             {
                 float time = Singleton<StageBattleComponent>.instance.timeFromMusicStart;
                 lyricContent = Lyric.GetLyricByTime(lyrics, time).content;
+            }
+        }
+
+        public void OnGUI()
+        {
+            if (MiscToolsForMDMod.config.indicator.ap.enabled || MiscToolsForMDMod.config.indicator.key.enabled)
+            {
+                windowRect = GUILayout.Window(0, windowRect, (GUI.WindowFunction)IndicatorWindow, "MiscToolsUI", null);
+            }
+            if (MiscToolsForMDMod.config.lyric.enabled)
+            {
+                lyricWindowRect = GUILayout.Window(1, lyricWindowRect, (GUI.WindowFunction)LyricWindow, "Lyric", null);
             }
         }
 
@@ -210,31 +263,35 @@ namespace MiscToolsForMD
                 float trueAcc = actualWeight * 1.0f / targetWeight;
                 float trueAccInGame = actualWeightInGame * 1.0f / targetWeightInGame;
                 MiscToolsForMDMod.instance.Log("trueAcc:" + trueAcc + ";trueAccInGame:" + trueAccInGame);
+                if (!MiscToolsForMDMod.config.indicator.ap.manual)
+                {
+                    trueAcc = trueAccInGame;
+                }
                 float acc = Mathf.RoundToInt(trueAcc / unit) * unit;
                 // See Assets.Scripts.GameCore.HostComponent.TaskStageTarget.GetAccuracy
                 if (trueAcc < acc && (acc == 0.6f || acc == 0.7f || acc == 0.8f || acc == 0.9f || acc == 1.0f))
                 {
                     acc -= unit;
                 }
-                accuracyText = string.Format(lang.localizedAccuracy, acc);
+                accuracyText = string.Format("{0:P}", acc);
                 if (acc < 1f && acc >= 0f)
                 {
                     if (isMiss || (Singleton<TaskStageTarget>.instance.GetMiss() > 0))
                     {
-                        accuracyStyle.normal.textColor = Defines.missColor;
+                        accuracyStyle.normal.textColor = missColor;
                     }
                     else
                     {
-                        accuracyStyle.normal.textColor = Defines.greatColor;
+                        accuracyStyle.normal.textColor = greatColor;
                     }
                 }
                 else if (acc == 1f)
                 {
-                    accuracyStyle.normal.textColor = Defines.apColor;
+                    accuracyStyle.normal.textColor = apColor;
                 }
                 else
                 {
-                    accuracyStyle.normal.textColor = Defines.errColor;
+                    accuracyStyle.normal.textColor = errColor;
                 }
             }
         }
@@ -245,9 +302,8 @@ namespace MiscToolsForMD
             if (MiscToolsForMDMod.config.indicator.ap.enabled)
             {
                 GUILayout.Label(accuracyText, accuracyStyle, null);
-                GUILayout.Space(20f);
+                GUILayout.Space(10f);
             }
-            GUILayout.FlexibleSpace();
             if (MiscToolsForMDMod.config.indicator.key.enabled)
             {
                 GUILayout.BeginHorizontal(null);
@@ -305,7 +361,7 @@ namespace MiscToolsForMD
             }
             else
             {
-                keyInfo.style.normal.textColor = Defines.displayColor;
+                keyInfo.style.normal.textColor = displayColor;
             }
         }
 

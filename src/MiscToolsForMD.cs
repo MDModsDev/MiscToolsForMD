@@ -103,6 +103,7 @@ namespace MiscToolsForMD
             {
                 return;
             }
+            bool skipUpdateGameWeights = false;
             if (!musicData.noteData.addCombo)
             {
                 indicator.targetWeight += 2;
@@ -139,6 +140,7 @@ namespace MiscToolsForMD
                     if (playResult2 == (byte)TaskResult.None)
                     {
                         instance.Log("Current is first note of a double-press group.");
+                        skipUpdateGameWeights = true;
                     }
                     else
                     {
@@ -187,12 +189,15 @@ namespace MiscToolsForMD
                     instance.Log("Normal note captured.");
                 }
             }
-            indicator.actualWeightInGame = GetCurrentActualWeightInGame();
-            indicator.targetWeightInGame = GetCurrentTargetWeightInGame(idx);
+            if (!skipUpdateGameWeights)
+            {
+                indicator.actualWeightInGame = GetCurrentActualWeightInGame();
+                indicator.targetWeightInGame = GetCurrentTargetWeightInGame(idx);
+                instance.Log("targetWeightInGame:" + indicator.targetWeightInGame + ";actualWeightInGame:" + indicator.actualWeightInGame);
+            }
             indicator.UpdateAccuracy();
             indicator.cache.AddRecordedId(idx);
             instance.Log("targetWeight:" + indicator.targetWeight + ";actualWeight:" + indicator.actualWeight);
-            instance.Log("targetWeightInGame:" + indicator.targetWeightInGame + ";actualWeightInGame:" + indicator.actualWeightInGame);
             instance.skipOnNoteResult = true;
         }
 

@@ -8,26 +8,19 @@ namespace MiscToolsForMD
     internal class Lang
     {
         public string id;
-        public string localizedAccuracy;
         public Dictionary<ControlType, string> localizedControlTypes;
 
-        public static Lang GetLang()
+        public static Lang GetLang(SystemLanguage language = SystemLanguage.Unknown)
         {
-            return GetLang(Singleton<GameAccountSystem>.instance.GetLanguage());
-        }
-
-        public static Lang GetLang(SystemLanguage language)
-        {
+            if (language == SystemLanguage.Unknown)
+            {
+                language = Singleton<GameAccountSystem>.instance.GetLanguage();
+            }
             Lang lang = new();
             lang.id = language switch
             {
                 SystemLanguage.ChineseSimplified => "zh-cn",
                 _ => "en-us",
-            };
-            lang.localizedAccuracy = language switch
-            {
-                SystemLanguage.ChineseSimplified => "准确度：{0:P}",
-                _ => "Accuracy: {0:P}"
             };
             lang.localizedControlTypes = language switch
             {
