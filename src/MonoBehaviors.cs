@@ -6,7 +6,9 @@ using FormulaBase;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using UnhollowerRuntimeLib;
 using UnityEngine;
 
 namespace MiscToolsForMD
@@ -32,9 +34,12 @@ namespace MiscToolsForMD
         {
         }
 
+        public Indicator() : base(ClassInjector.DerivedConstructorPointer<Indicator>()) => ClassInjector.DerivedConstructorBody(this);
+
         public void Start()
         {
             cache.CleanCache();
+            MusicDisplayInfo musicDisplayInfo = MiscToolsForMDMod.GetMusicDisplayInfo();
             if (MiscToolsForMDMod.config.indicator.ap.enabled || MiscToolsForMDMod.config.indicator.key.enabled)
             {
                 if (MiscToolsForMDMod.config.indicator.x < 0)
@@ -109,7 +114,7 @@ namespace MiscToolsForMD
                 };
                 accuracyStyle.normal.textColor = apColor;
                 accuracyText = string.Format("{0:P}", 1);
-                List<string> workingKeys = GetControlKeys();
+                List<string> workingKeys = MiscToolsForMDMod.GetControlKeys();
                 List<KeyCode> keyCodes = Enum.GetValues(typeof(KeyCode)).Cast<KeyCode>().ToList();
                 if (workingKeys.Count >= 3 && workingKeys.Count <= 9)
                 {
@@ -121,6 +126,7 @@ namespace MiscToolsForMD
                         {
                             code = keyCodes.Find(keyCode => keyCode.ToString() == workingKeys[i]),
                             count = 0,
+                            displayColor = displayColor,
                             style = new()
                             {
                                 alignment = TextAnchor.MiddleCenter,
@@ -172,31 +178,12 @@ namespace MiscToolsForMD
                     height = MiscToolsForMDMod.config.lyric.height,
                     width = MiscToolsForMDMod.config.lyric.width,
                 };
-                // See SetSelectedMusicNameTxt
-                string musicName, musicAuthor;
-                if (DataHelper.selectedAlbumUid != "collection" || DataHelper.selectedMusicIndex < 0)
-                {
-                    musicName = Singleton<ConfigManager>.instance.GetConfigStringValue(DataHelper.selectedAlbumName, "uid", "name", DataHelper.selectedMusicUidFromInfoList);
-                    musicAuthor = Singleton<ConfigManager>.instance.GetConfigStringValue(DataHelper.selectedAlbumName, "uid", "author", DataHelper.selectedMusicUidFromInfoList);
-                }
-                else if (DataHelper.collections.Count == 0 || DataHelper.collections.Count < DataHelper.selectedMusicIndex)
-                {
-                    musicName = "?????";
-                    musicAuthor = "???";
-                }
-                else
-                {
-                    musicName = Singleton<ConfigManager>.instance.GetConfigStringValue(DataHelper.selectedAlbumName, "uid", "name", DataHelper.collections[DataHelper.selectedMusicIndex]);
-                    musicAuthor = Singleton<ConfigManager>.instance.GetConfigStringValue(DataHelper.selectedAlbumName, "uid", "author", DataHelper.collections[DataHelper.selectedMusicIndex]);
-                }
-
-                MiscToolsForMDMod.instance.Log("Song name: " + musicName + "; author: " + musicAuthor);
                 bool successGetLyric = false;
                 foreach (ILyricSource source in MiscToolsForMDMod.instance.lyricSources)
                 {
                     try
                     {
-                        lyrics = source.GetLyrics(musicName, musicAuthor);
+                        lyrics = source.GetLyrics(musicDisplayInfo.musicName, musicDisplayInfo.authorName);
                         successGetLyric = true;
                         break;
                     }
@@ -211,6 +198,13 @@ namespace MiscToolsForMD
                     MiscToolsForMDMod.instance.LoggerInstance.Error("No available lyric. We will disable lyric displaying.");
                 }
             }
+            if (MiscToolsForMDMod.config.debug)
+            {
+                string musicDatasJsonPath = Path.Combine(Defines.basePath, "MusicDatas");
+                string musicDatasJsonFile = Path.Combine(musicDatasJsonPath, string.Format("{0}-{1}-{2}.json", musicDisplayInfo.musicName, musicDisplayInfo.authorName, DataHelper.selectedMusicLevel));
+                cache.ExportMusicDatas(musicDatasJsonFile);
+                MiscToolsForMDMod.instance.Log("Exported MusicDatas to " + musicDatasJsonFile);
+            }
         }
 
         public void Update()
@@ -222,12 +216,12 @@ namespace MiscToolsForMD
                     KeyInfo keyInfo = keyInfos[i];
                     if (Input.GetKeyDown(keyInfo.code))
                     {
-                        AddKeyCount(keyInfo);
-                        SetKeyColor(keyInfo, pressingColor);
+                        keyInfo.AddCount();
+                        keyInfo.SetColor(pressingColor);
                     }
                     if (Input.GetKeyUp(keyInfo.code))
                     {
-                        SetKeyColor(keyInfo, displayColor);
+                        keyInfo.ResetColor();
                     }
                 }
             }
@@ -255,7 +249,7 @@ namespace MiscToolsForMD
             MiscToolsForMDMod.indicator = null;
         }
 
-        public void UpdateAccuracy()
+        internal void UpdateAccuracy()
         {
             if (targetWeight > 0)
             {
@@ -343,54 +337,6 @@ namespace MiscToolsForMD
             GUILayout.BeginVertical(null);
             GUILayout.Label(lyricContent, lyricStyle, null);
             GUILayout.EndVertical();
-        }
-
-        private void AddKeyCount(KeyInfo keyInfo, uint num = 1)
-        {
-            if (Singleton<StageBattleComponent>.instance.isInGame)
-            {
-                keyInfo.count += num;
-            }
-        }
-
-        private void SetKeyColor(KeyInfo keyInfo, Color color)
-        {
-            if (Singleton<StageBattleComponent>.instance.isInGame)
-            {
-                keyInfo.style.normal.textColor = color;
-            }
-            else
-            {
-                keyInfo.style.normal.textColor = displayColor;
-            }
-        }
-
-        private List<string> GetControlKeys()
-        {
-            List<string> keys = new();
-            string text;
-            // See Assets.Scripts.GameCore.Controller.StandloneController.GetDefaultKeyList
-            if (PlayerPrefs.HasKey("Controller"))
-            {
-                text = Singleton<ConfigManager>.instance.GetString("Controller");
-            }
-            else
-            {
-                text = "{\"Keylist\":{ \"Custom\":[{\"Key\":\"None\",\"Type\":\"BattleAir\"},{\"Key\":\"None\",\"Type\":\"BattleAir\"},{\"Key\":\"None\",\"Type\":\"BattleAir\"},{\"Key\":\"None\",\"Type\":\"BattleAir\"},{\"Key\":\"None\",\"Type\":\"BattleGround\"},{\"Key\":\"None\",\"Type\":\"BattleGround\"},{\"Key\":\"None\",\"Type\":\"BattleGround\"},{\"Key\":\"None\",\"Type\":\"BattleGround\"}]},\"IsChanged\":\"false\",\"KeyBoardProposal\":\"Default\",\"HandleProposal\":\"Default\",\"IsVibration\":\"true\",\"FeverKey\":\"Space\"}";
-            }
-            KeyConfigObj keyConfig = JsonConvert.DeserializeObject<KeyConfigObj>(text);
-            foreach (KeyObj key in keyConfig.KeyList.Custom)
-            {
-                if (key.Key != "None")
-                {
-                    keys.Add(key.Key);
-                }
-            }
-            if (!DataHelper.isAutoFever && keyConfig.FeverKey != "None")
-            {
-                keys.Insert(keys.Count / 2, keyConfig.FeverKey);
-            }
-            return keys;
         }
     }
 }

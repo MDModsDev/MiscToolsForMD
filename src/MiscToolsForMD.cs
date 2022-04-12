@@ -1,7 +1,9 @@
-﻿using Assets.Scripts.GameCore.GamePlay;
+﻿using Assets.Scripts.Database;
+using Assets.Scripts.GameCore.GamePlay;
 using Assets.Scripts.GameCore.HostComponent;
 using Assets.Scripts.GameCore.Managers;
 using Assets.Scripts.PeroTools.Commons;
+using Assets.Scripts.PeroTools.Managers;
 using FormulaBase;
 using GameLogic;
 using HarmonyLib;
@@ -30,7 +32,7 @@ namespace MiscToolsForMD
 
         public override void OnApplicationLateStart()
         {
-            if (System.IO.File.Exists(Defines.configPath))
+            if (File.Exists(Defines.configPath))
             {
                 try
                 {
@@ -43,8 +45,25 @@ namespace MiscToolsForMD
                     SaveConfig();
                 }
             }
+            else if (File.Exists(Path.Combine("UserData", "MiscToolsForMD.json")))
+            {
+                try
+                {
+                    config = JsonConvert.DeserializeObject<Config>(File.ReadAllText(Path.Combine("UserData", "MiscToolsForMD.json")));
+                    SaveConfig();
+                    File.Delete(Path.Combine("UserData", "MiscToolsForMD.json"));
+                    LoggerInstance.Msg("Migrating config successful!");
+                }
+                catch (Exception ex)
+                {
+                    LoggerInstance.Error("Failed to migrate config:" + ex.Message + ", we will create default one instead.");
+                    config = new();
+                    SaveConfig();
+                }
+            }
             else
             {
+                LoggerInstance.Msg("Creating default config...");
                 config = new();
                 SaveConfig();
             }
@@ -76,10 +95,101 @@ namespace MiscToolsForMD
             {
                 lyricSources.Add(new LocalSource());
                 // TODO: Load other lyric source
-                lyricSources.OrderBy(lyricSource => lyricSource.Priority);
+                lyricSources = lyricSources.OrderBy(lyricSource => lyricSource.Priority).ToList();
             }
             instance = this;
             LoggerInstance.Msg("MiscToolsForMD Loads Completed.");
+        }
+
+        public static List<string> GetControlKeys()
+        {
+            List<string> keys = new();
+            string text;
+            // See Assets.Scripts.GameCore.Controller.StandloneController.GetDefaultKeyList
+            if (PlayerPrefs.HasKey("Controller"))
+            {
+                text = Singleton<ConfigManager>.instance.GetString("Controller");
+            }
+            else
+            {
+                text = "{\"Keylist\":{ \"Custom\":[{\"Key\":\"None\",\"Type\":\"BattleAir\"},{\"Key\":\"None\",\"Type\":\"BattleAir\"},{\"Key\":\"None\",\"Type\":\"BattleAir\"},{\"Key\":\"None\",\"Type\":\"BattleAir\"},{\"Key\":\"None\",\"Type\":\"BattleGround\"},{\"Key\":\"None\",\"Type\":\"BattleGround\"},{\"Key\":\"None\",\"Type\":\"BattleGround\"},{\"Key\":\"None\",\"Type\":\"BattleGround\"}]},\"IsChanged\":\"false\",\"KeyBoardProposal\":\"Default\",\"HandleProposal\":\"Default\",\"IsVibration\":\"true\",\"FeverKey\":\"Space\"}";
+            }
+            KeyConfigObj keyConfig = JsonConvert.DeserializeObject<KeyConfigObj>(text);
+            foreach (KeyObj key in keyConfig.KeyList.Custom)
+            {
+                if (key.Key != "None")
+                {
+                    keys.Add(key.Key);
+                }
+            }
+            if (!DataHelper.isAutoFever && keyConfig.FeverKey != "None")
+            {
+                keys.Insert(keys.Count / 2, keyConfig.FeverKey);
+            }
+            return keys;
+        }
+
+        public static MusicDisplayInfo GetMusicDisplayInfo()
+        {
+            // See SetSelectedMusicNameTxt
+            string musicName, musicAuthor;
+            if (DataHelper.selectedAlbumUid != "collection" || DataHelper.selectedMusicIndex < 0)
+            {
+                musicName = Singleton<ConfigManager>.instance.GetConfigStringValue(DataHelper.selectedAlbumName, "uid", "name", DataHelper.selectedMusicUidFromInfoList);
+                musicAuthor = Singleton<ConfigManager>.instance.GetConfigStringValue(DataHelper.selectedAlbumName, "uid", "author", DataHelper.selectedMusicUidFromInfoList);
+            }
+            else if (DataHelper.collections.Count == 0 || DataHelper.collections.Count < DataHelper.selectedMusicIndex)
+            {
+                musicName = "?????";
+                musicAuthor = "???";
+            }
+            else
+            {
+                musicName = Singleton<ConfigManager>.instance.GetConfigStringValue(DataHelper.selectedAlbumName, "uid", "name", DataHelper.collections[DataHelper.selectedMusicIndex]);
+                musicAuthor = Singleton<ConfigManager>.instance.GetConfigStringValue(DataHelper.selectedAlbumName, "uid", "author", DataHelper.collections[DataHelper.selectedMusicIndex]);
+            }
+
+            MiscToolsForMDMod.instance.Log("Song name: " + musicName + "; author: " + musicAuthor);
+            return new()
+            {
+                musicName = musicName,
+                authorName = musicAuthor
+            };
+        }
+
+        public static int GetCurrentTargetWeightInGame(int idx)
+        {
+            // See Assets.Scripts.GameCore.HostComponent.TaskStageTarget.GetTrueAccuracyNew
+            List<MusicData> validMusicDatas = indicator.cache.GetAllMusicDatasBeforeId(idx);
+            int touchNum = validMusicDatas.Count(musicData => musicData.noteData.type == (uint)NoteType.Hp || musicData.noteData.type == (uint)NoteType.Music);
+            int normalNum = validMusicDatas.Count(musicData => musicData.noteData.addCombo && !musicData.isLongPressing);
+            int blockNum = validMusicDatas.Count(musicData => musicData.noteData.type == (uint)NoteType.Block);
+            return (touchNum + normalNum + blockNum) * 2;
+        }
+
+        public static int GetCurrentActualWeightInGame()
+        {
+            // See Assets.Scripts.GameCore.HostComponent.TaskStageTarget.GetTrueAccuracyNew
+            TaskStageTarget targetInstance = Singleton<TaskStageTarget>.instance;
+            int actualTouchNum = targetInstance.GetCountValue(TaskCount.Music) + targetInstance.GetCountValue(TaskCount.Energy) + targetInstance.GetCountValue(TaskCount.TouhouRedPoint);
+            int actualPerfectNum = targetInstance.GetHitCountByResult(TaskResult.Prefect);
+            int actualGreatNum = targetInstance.GetHitCountByResult(TaskResult.Great);
+            int actualBlockNum = targetInstance.GetCountValue(TaskCount.Block);
+            return actualTouchNum * 2 + actualPerfectNum * 2 + actualGreatNum + actualBlockNum * 2;
+        }
+
+        public void Log(object log, object normalLog = null)
+        {
+            StackTrace trace = new();
+            string callerName = "[" + trace.GetFrame(1).GetMethod().Name + "] ";
+            if (config.debug)
+            {
+                LoggerInstance.Msg(callerName + log);
+            }
+            else if (normalLog != null)
+            {
+                LoggerInstance.Msg(callerName + normalLog);
+            }
         }
 
         private static void SetPlayResult(int idx, uint result, bool isMulEnd)
@@ -103,7 +213,6 @@ namespace MiscToolsForMD
             {
                 return;
             }
-            bool skipUpdateGameWeights = false;
             if (!musicData.noteData.addCombo)
             {
                 indicator.targetWeight += 2;
@@ -140,7 +249,6 @@ namespace MiscToolsForMD
                     if (playResult2 == (byte)TaskResult.None)
                     {
                         instance.Log("Current is first note of a double-press group.");
-                        skipUpdateGameWeights = true;
                     }
                     else
                     {
@@ -189,12 +297,12 @@ namespace MiscToolsForMD
                     instance.Log("Normal note captured.");
                 }
             }
-            if (!skipUpdateGameWeights)
+            if (musicData.noteData.type != (uint)NoteType.Block)
             {
                 indicator.actualWeightInGame = GetCurrentActualWeightInGame();
                 indicator.targetWeightInGame = GetCurrentTargetWeightInGame(idx);
-                instance.Log("targetWeightInGame:" + indicator.targetWeightInGame + ";actualWeightInGame:" + indicator.actualWeightInGame);
             }
+            instance.Log("targetWeightInGame:" + indicator.targetWeightInGame + ";actualWeightInGame:" + indicator.actualWeightInGame);
             indicator.UpdateAccuracy();
             indicator.cache.AddRecordedId(idx);
             instance.Log("targetWeight:" + indicator.targetWeight + ";actualWeight:" + indicator.actualWeight);
@@ -248,42 +356,7 @@ namespace MiscToolsForMD
             instance.Log("Created UI");
         }
 
-        private static int GetCurrentTargetWeightInGame(int idx)
-        {
-            // See Assets.Scripts.GameCore.HostComponent.TaskStageTarget.GetTrueAccuracyNew
-            List<MusicData> validMusicDatas = indicator.cache.GetAllMusicDatasBeforeId(idx);
-            int touchNum = validMusicDatas.Count(musicData => musicData.noteData.type == (uint)NoteType.Hp || musicData.noteData.type == (uint)NoteType.Music);
-            int normalNum = validMusicDatas.Count(musicData => musicData.noteData.addCombo && !musicData.isLongPressing);
-            int blockNum = validMusicDatas.Count(musicData => musicData.noteData.type == (uint)NoteType.Block);
-            return (touchNum + normalNum + blockNum) * 2;
-        }
-
-        private static int GetCurrentActualWeightInGame()
-        {
-            // See Assets.Scripts.GameCore.HostComponent.TaskStageTarget.GetTrueAccuracyNew
-            TaskStageTarget targetInstance = Singleton<TaskStageTarget>.instance;
-            int actualTouchNum = targetInstance.GetCountValue(TaskCount.Music) + targetInstance.GetCountValue(TaskCount.Energy) + targetInstance.GetCountValue(TaskCount.TouhouRedPoint);
-            int actualPerfectNum = targetInstance.GetHitCountByResult(TaskResult.Prefect);
-            int actualGreatNum = targetInstance.GetHitCountByResult(TaskResult.Great);
-            int actualBlockNum = targetInstance.GetCountValue(TaskCount.Block);
-            return actualTouchNum * 2 + actualPerfectNum * 2 + actualGreatNum + actualBlockNum * 2;
-        }
-
-        public void Log(object log, object normalLog = null)
-        {
-            StackTrace trace = new();
-            string callerName = "[" + trace.GetFrame(1).GetMethod().Name + "] ";
-            if (config.debug)
-            {
-                LoggerInstance.Msg(callerName + log);
-            }
-            else if (normalLog != null)
-            {
-                LoggerInstance.Msg(callerName + normalLog);
-            }
-        }
-
-        public void SaveConfig()
+        private void SaveConfig()
         {
             string jsonStr = JsonConvert.SerializeObject(config, Formatting.Indented);
             Directory.CreateDirectory(Path.GetDirectoryName(Defines.configPath));

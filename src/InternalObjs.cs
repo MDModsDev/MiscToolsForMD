@@ -1,8 +1,10 @@
 ﻿using Assets.Scripts.PeroTools.Commons;
 using FormulaBase;
 using GameLogic;
+using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEngine;
 
 namespace MiscToolsForMD
@@ -86,7 +88,8 @@ namespace MiscToolsForMD
             { "Tilde", "~" }
         };
 
-        public static readonly string configPath = Path.Combine("UserData", "MiscToolsForMD.json");
+        public static readonly string basePath = Path.Combine("UserData", "MiscToolsForMD");
+        public static readonly string configPath = Path.Combine(basePath, "MiscToolsForMD.json");
     }
 
     internal enum ControlType
@@ -102,26 +105,52 @@ namespace MiscToolsForMD
         public uint count;
         public KeyCode code;
         public GUIStyle style;
+        public Color displayColor;
 
         public override string ToString()
         {
             return "type:" + type + ";code:" + code;
+        }
+
+        public void AddCount(uint countToAdd = 1)
+        {
+            if (Singleton<StageBattleComponent>.instance.isInGame)
+            {
+                count += countToAdd;
+            }
+        }
+
+        public void SetColor(Color color)
+        {
+            if (Singleton<StageBattleComponent>.instance.isInGame)
+            {
+                style.normal.textColor = color;
+            }
+            else
+            {
+                ResetColor();
+            }
+        }
+
+        public void ResetColor()
+        {
+            style.normal.textColor = displayColor;
         }
     }
 
     internal class Cache
     {
         private readonly List<int> recordedIds = new();
-        private readonly List<MusicData> musicList = new();
-        private int lastId = 0;
-        private Il2CppSystem.Collections.Generic.List<MusicData> musicDatas;
+        private readonly List<MusicData> musicDatas = new();
 
         public void CleanCache()
         {
             recordedIds.Clear();
-            musicList.Clear();
-            lastId = 0;
-            musicDatas = Singleton<StageBattleComponent>.instance.GetMusicData();
+            Il2CppSystem.Collections.Generic.List<MusicData> musicDatasInIl2Cpp = Singleton<StageBattleComponent>.instance.GetMusicData();
+            for (int i = 0; i < musicDatasInIl2Cpp.Count; i++)
+            {
+                musicDatas.Add(musicDatasInIl2Cpp[i]);
+            }
         }
 
         public void AddRecordedId(int id)
@@ -139,20 +168,30 @@ namespace MiscToolsForMD
 
         public List<MusicData> GetAllMusicDatasBeforeId(int id)
         {
-            if (id < 0 || id > musicDatas.Count)
+            int lastId = 0;
+            if (recordedIds.Count != 0)
             {
-                id = musicDatas.Count - 1;
+                lastId = recordedIds.Max();
             }
-            if (id >= lastId + 1)
+            if (id > lastId)
             {
-                for (int i = lastId + 1; i <= id; i++)
-                {
-                    musicList.Add(musicDatas[i]);
-                }
-                lastId = id;
+                return musicDatas.FindAll(musicData => musicData.objId <= id);
             }
-            return musicList;
+            return musicDatas.FindAll(musicData => musicData.objId <= lastId);
         }
+
+        public void ExportMusicDatas(string path)
+        {
+            string musicDatasJsonStr = JsonConvert.SerializeObject(musicDatas, Formatting.Indented);
+            Directory.CreateDirectory(Path.GetDirectoryName(path));
+            File.WriteAllText(path, musicDatasJsonStr);
+        }
+    }
+
+    public class MusicDisplayInfo
+    {
+        public string musicName;
+        public string authorName;
     }
 
     public class Config
