@@ -27,8 +27,6 @@ namespace MiscToolsForMD
         public static Config config;
         public static MiscToolsForMDMod instance;
         public static Indicator indicator;
-        private bool skipSetPlayResult = false;
-        private bool skipOnNoteResult = false;
 
         public override void OnApplicationLateStart()
         {
@@ -197,11 +195,6 @@ namespace MiscToolsForMD
             // See Assets.Scripts.GameCore.HostComponent.TaskStageTarget.GetTrueAccuracyNew
             // and Assets.Scripts.GameCore.HostComponent.TaskStageTarget.SetPlayResult
             // AddComboMiss -> SetPlayResult -> OnNoteResult
-            if (instance.skipSetPlayResult)
-            {
-                instance.skipSetPlayResult = false;
-                return;
-            }
             instance.Log("idx:" + idx + ";result:" + result + ";isMulEnd:" + isMulEnd);
             if ((result <= (uint)TaskResult.None) || indicator.cache.IsIdRecorded(idx))
             {
@@ -297,25 +290,16 @@ namespace MiscToolsForMD
                     instance.Log("Normal note captured.");
                 }
             }
-            if (musicData.noteData.type != (uint)NoteType.Block)
-            {
-                indicator.actualWeightInGame = GetCurrentActualWeightInGame();
-                indicator.targetWeightInGame = GetCurrentTargetWeightInGame(idx);
-            }
+            indicator.actualWeightInGame = GetCurrentActualWeightInGame();
+            indicator.targetWeightInGame = GetCurrentTargetWeightInGame(idx);
             instance.Log("targetWeightInGame:" + indicator.targetWeightInGame + ";actualWeightInGame:" + indicator.actualWeightInGame);
             indicator.UpdateAccuracy();
             indicator.cache.AddRecordedId(idx);
             instance.Log("targetWeight:" + indicator.targetWeight + ";actualWeight:" + indicator.actualWeight);
-            instance.skipOnNoteResult = true;
         }
 
         private static void OnNoteResult(int result)
         {
-            if (instance.skipOnNoteResult)
-            {
-                instance.skipOnNoteResult = false;
-                return;
-            }
             instance.Log("result:" + result);
             if (result == (int)TaskResult.None)
             {
@@ -334,7 +318,6 @@ namespace MiscToolsForMD
                 indicator.isMiss = true;
                 indicator.targetWeight += 2;
                 indicator.UpdateAccuracy();
-                instance.skipSetPlayResult = true;
                 instance.Log("Missing normal note.");
             }
         }
