@@ -251,42 +251,47 @@ namespace MiscToolsForMD
 
         internal void UpdateAccuracy()
         {
+            float unit = 0.0001f;
+            float trueAcc = 1.0f;
+            float trueAccInGame = 1.0f;
             if (targetWeight > 0)
             {
-                float unit = 0.0001f;
-                float trueAcc = actualWeight * 1.0f / targetWeight;
-                float trueAccInGame = actualWeightInGame * 1.0f / targetWeightInGame;
-                MiscToolsForMDMod.instance.Log("trueAcc:" + trueAcc + ";trueAccInGame:" + trueAccInGame);
-                if (!MiscToolsForMDMod.config.indicator.ap.manual)
+                trueAcc = actualWeight * 1.0f / targetWeight;
+            }
+            if (targetWeightInGame > 0)
+            {
+                trueAccInGame = actualWeightInGame * 1.0f / targetWeightInGame;
+            }
+            MiscToolsForMDMod.instance.Log("trueAcc:" + trueAcc + ";trueAccInGame:" + trueAccInGame);
+            if (!MiscToolsForMDMod.config.indicator.ap.manual)
+            {
+                trueAcc = trueAccInGame;
+            }
+            float acc = Mathf.RoundToInt(trueAcc / unit) * unit;
+            // See Assets.Scripts.GameCore.HostComponent.TaskStageTarget.GetAccuracy
+            if (trueAcc < acc && (acc == 0.6f || acc == 0.7f || acc == 0.8f || acc == 0.9f || acc == 1.0f))
+            {
+                acc -= unit;
+            }
+            accuracyText = string.Format("{0:P}", acc);
+            if (acc < 1f && acc >= 0f)
+            {
+                if (isMiss || (Singleton<TaskStageTarget>.instance.GetMiss() > 0))
                 {
-                    trueAcc = trueAccInGame;
-                }
-                float acc = Mathf.RoundToInt(trueAcc / unit) * unit;
-                // See Assets.Scripts.GameCore.HostComponent.TaskStageTarget.GetAccuracy
-                if (trueAcc < acc && (acc == 0.6f || acc == 0.7f || acc == 0.8f || acc == 0.9f || acc == 1.0f))
-                {
-                    acc -= unit;
-                }
-                accuracyText = string.Format("{0:P}", acc);
-                if (acc < 1f && acc >= 0f)
-                {
-                    if (isMiss || (Singleton<TaskStageTarget>.instance.GetMiss() > 0))
-                    {
-                        accuracyStyle.normal.textColor = missColor;
-                    }
-                    else
-                    {
-                        accuracyStyle.normal.textColor = greatColor;
-                    }
-                }
-                else if (acc == 1f)
-                {
-                    accuracyStyle.normal.textColor = apColor;
+                    accuracyStyle.normal.textColor = missColor;
                 }
                 else
                 {
-                    accuracyStyle.normal.textColor = errColor;
+                    accuracyStyle.normal.textColor = greatColor;
                 }
+            }
+            else if (acc == 1f)
+            {
+                accuracyStyle.normal.textColor = apColor;
+            }
+            else
+            {
+                accuracyStyle.normal.textColor = errColor;
             }
         }
 
