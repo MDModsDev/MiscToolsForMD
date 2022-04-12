@@ -87,7 +87,7 @@ namespace MiscToolsForMD
                     displayColor = Color.black;
                     MiscToolsForMDMod.instance.Log("Failed to read displayColor, use default instead");
                 }
-                if (ColorUtility.DoTryParseHtmlColor(MiscToolsForMDMod.config.indicator.key.pressing, out pressingColor))
+                if (!ColorUtility.DoTryParseHtmlColor(MiscToolsForMDMod.config.indicator.key.pressing, out pressingColor))
                 {
                     pressingColor = Color.white;
                     MiscToolsForMDMod.instance.Log("Failed to read pressingColor, use default instead");
