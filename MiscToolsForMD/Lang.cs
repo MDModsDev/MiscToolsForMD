@@ -3,7 +3,7 @@ using Assets.Scripts.PeroTools.Commons;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace MiscToolsForMD
+namespace MiscToolsForMD.MOD
 {
     internal class Lang
     {
@@ -16,26 +16,36 @@ namespace MiscToolsForMD
             {
                 language = Singleton<GameAccountSystem>.instance.GetLanguage();
             }
-            Lang lang = new();
-            lang.id = language switch
+            Lang lang = new Lang();
+            switch (language)
             {
-                SystemLanguage.ChineseSimplified => "zh-cn",
-                _ => "en-us",
-            };
-            lang.localizedControlTypes = language switch
+                case SystemLanguage.ChineseSimplified:
+                    lang.id = "zh-cn";
+                    break;
+
+                default:
+                    lang.id = "en-us";
+                    break;
+            }
+            switch (language)
             {
-                SystemLanguage.ChineseSimplified => new Dictionary<ControlType, string>()
+                case SystemLanguage.ChineseSimplified:
+                    lang.localizedControlTypes = new Dictionary<ControlType, string>()
                 {
                     { ControlType.Air,"空中" },
                     { ControlType.Fever,"Fever" },
                     { ControlType.Ground,"地面" }
-                },
-                _ => new Dictionary<ControlType, string>() {
+                };
+                    break;
+
+                default:
+                    lang.localizedControlTypes = new Dictionary<ControlType, string>() {
                     { ControlType.Air, "Air" },
                     { ControlType.Fever,"Fever" },
                     { ControlType.Ground,"Ground" }
-                }
-            };
+                };
+                    break;
+            }
             return lang;
         }
     }

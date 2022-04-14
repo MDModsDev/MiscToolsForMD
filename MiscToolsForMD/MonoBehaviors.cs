@@ -1,9 +1,8 @@
 ﻿using Assets.Scripts.Database;
 using Assets.Scripts.GameCore.HostComponent;
 using Assets.Scripts.PeroTools.Commons;
-using Assets.Scripts.PeroTools.Managers;
 using FormulaBase;
-using Newtonsoft.Json;
+using MiscToolsForMD.SDK;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -11,23 +10,20 @@ using System.Linq;
 using UnhollowerRuntimeLib;
 using UnityEngine;
 
-namespace MiscToolsForMD
+namespace MiscToolsForMD.MOD
 {
     public class Indicator : MonoBehaviour
     {
-        private readonly Dictionary<string, string> keyDisplayNames = Defines.keyDisplayNames;
-        private readonly List<KeyInfo> keyInfos = new();
+        private readonly Dictionary<string, string> keyDisplayNames = SDK.PublicDefines.keyDisplayNames;
+        private readonly List<KeyInfo> keyInfos = new List<KeyInfo>();
+        private GameStatisticsProvider statisticsProvider;
         private string accuracyText = "", lyricContent = "";
         private List<Lyric> lyrics;
         private Rect windowRect, lyricWindowRect;
         private GUIStyle accuracyStyle, labelStyle, lyricStyle;
-        private Color32 apColor, displayColor, pressingColor, missColor, greatColor, errColor;
+        private Color32 apColor, displayColor, pressingColor, missColor, greatColor;
         internal int actualWeight = 0;
         internal int targetWeight = 0;
-        internal int actualWeightInGame = 0;
-        internal int targetWeightInGame = 0;
-        internal bool isMiss = false;
-        internal Cache cache = new();
         internal Lang lang = Lang.GetLang();
 
         public Indicator(IntPtr intPtr) : base(intPtr)
@@ -38,8 +34,9 @@ namespace MiscToolsForMD
 
         public void Start()
         {
-            cache.CleanCache();
-            MusicDisplayInfo musicDisplayInfo = MiscToolsForMDMod.GetMusicDisplayInfo();
+            statisticsProvider = InstancesManager.GetInstance<GameStatisticsProvider>(SDK.PublicDefines.statisticProviderId, out _);
+            MusicDisplayInfo musicDisplayInfo = statisticsProvider.GetMusicDisplayInfo();
+            MiscToolsForMDMod.instance.Log(string.Format("Song name:{0};author:{1}", musicDisplayInfo.musicName, musicDisplayInfo.authorName));
             if (MiscToolsForMDMod.config.indicator.ap.enabled || MiscToolsForMDMod.config.indicator.key.enabled)
             {
                 if (MiscToolsForMDMod.config.indicator.x < 0)
@@ -50,7 +47,7 @@ namespace MiscToolsForMD
                 {
                     MiscToolsForMDMod.config.indicator.y = 20;
                 }
-                windowRect = new()
+                windowRect = new Rect()
                 {
                     x = MiscToolsForMDMod.config.indicator.x,
                     y = MiscToolsForMDMod.config.indicator.y,
@@ -59,7 +56,7 @@ namespace MiscToolsForMD
                 };
                 if (!ColorUtility.DoTryParseHtmlColor(MiscToolsForMDMod.config.indicator.ap.ap, out apColor))
                 {
-                    apColor = new()
+                    apColor = new Color32()
                     {
                         r = (byte)(255 / 256f),
                         g = (byte)(215 / 256f),
@@ -69,7 +66,7 @@ namespace MiscToolsForMD
                 }
                 if (!ColorUtility.DoTryParseHtmlColor(MiscToolsForMDMod.config.indicator.ap.great, out greatColor))
                 {
-                    greatColor = new()
+                    greatColor = new Color32()
                     {
                         r = (byte)(65 / 256f),
                         g = (byte)(105 / 256f),
@@ -82,11 +79,6 @@ namespace MiscToolsForMD
                     missColor = Color.white;
                     MiscToolsForMDMod.instance.Log("Failed to read missColor, use default instead");
                 }
-                if (!ColorUtility.DoTryParseHtmlColor(MiscToolsForMDMod.config.indicator.ap.error, out errColor))
-                {
-                    errColor = Color.red;
-                    MiscToolsForMDMod.instance.Log("Failed to read errColor, use default instead");
-                }
                 if (!ColorUtility.DoTryParseHtmlColor(MiscToolsForMDMod.config.indicator.key.display, out displayColor))
                 {
                     displayColor = Color.black;
@@ -97,24 +89,24 @@ namespace MiscToolsForMD
                     pressingColor = Color.white;
                     MiscToolsForMDMod.instance.Log("Failed to read pressingColor, use default instead");
                 }
-                accuracyStyle = new()
+                accuracyStyle = new GUIStyle()
                 {
                     alignment = TextAnchor.MiddleCenter,
                     fontSize = MiscToolsForMDMod.config.indicator.ap.size
                 };
-                lyricStyle = new()
+                lyricStyle = new GUIStyle()
                 {
                     alignment = TextAnchor.MiddleCenter,
                     fontSize = MiscToolsForMDMod.config.lyric.size
                 };
-                labelStyle = new()
+                labelStyle = new GUIStyle()
                 {
                     alignment = TextAnchor.MiddleCenter,
                     fontSize = MiscToolsForMDMod.config.size
                 };
                 accuracyStyle.normal.textColor = apColor;
                 accuracyText = string.Format("{0:P}", 1);
-                List<string> workingKeys = MiscToolsForMDMod.GetControlKeys();
+                List<string> workingKeys = statisticsProvider.GetControlKeys();
                 List<KeyCode> keyCodes = Enum.GetValues(typeof(KeyCode)).Cast<KeyCode>().ToList();
                 if (workingKeys.Count >= 3 && workingKeys.Count <= 9)
                 {
@@ -122,12 +114,12 @@ namespace MiscToolsForMD
                     keyInfos.Clear();
                     for (int i = 0; i < workingKeys.Count; i++)
                     {
-                        KeyInfo keyInfo = new()
+                        KeyInfo keyInfo = new KeyInfo()
                         {
                             code = keyCodes.Find(keyCode => keyCode.ToString() == workingKeys[i]),
                             count = 0,
                             displayColor = displayColor,
-                            style = new()
+                            style = new GUIStyle()
                             {
                                 alignment = TextAnchor.MiddleCenter,
                                 fontSize = MiscToolsForMDMod.config.indicator.key.size
@@ -148,7 +140,7 @@ namespace MiscToolsForMD
                         keyInfo.style.normal.textColor = displayColor;
                         MiscToolsForMDMod.instance.Log("KeyInfo:" + keyInfo);
                         keyInfos.Add(keyInfo);
-                        if (keyInfos.FindAll(keyInfo => keyInfo.type == ControlType.Fever).Count > 1)
+                        if (keyInfos.FindAll(eachKeyInfo => eachKeyInfo.type == ControlType.Fever).Count > 1)
                         {
                             MiscToolsForMDMod.instance.LoggerInstance.Warning("There seems to many Fever keys.");
                         }
@@ -171,7 +163,7 @@ namespace MiscToolsForMD
                 {
                     MiscToolsForMDMod.config.lyric.y = Screen.height - MiscToolsForMDMod.config.lyric.height - 100;
                 }
-                lyricWindowRect = new()
+                lyricWindowRect = new Rect()
                 {
                     x = MiscToolsForMDMod.config.lyric.x,
                     y = MiscToolsForMDMod.config.lyric.y,
@@ -200,9 +192,9 @@ namespace MiscToolsForMD
             }
             if (MiscToolsForMDMod.config.debug)
             {
-                string musicDatasJsonPath = Path.Combine(Defines.basePath, "MusicDatas");
+                string musicDatasJsonPath = Path.Combine(SDK.PublicDefines.basePath, "MusicDatas");
                 string musicDatasJsonFile = Path.Combine(musicDatasJsonPath, string.Format("{0}-{1}-{2}.json", musicDisplayInfo.musicName, musicDisplayInfo.authorName, DataHelper.selectedMusicLevel));
-                cache.ExportMusicDatas(musicDatasJsonFile);
+                statisticsProvider.ExportMusicDatasTo(musicDatasJsonFile);
                 MiscToolsForMDMod.instance.Log("Exported MusicDatas to " + musicDatasJsonFile);
             }
         }
@@ -247,6 +239,7 @@ namespace MiscToolsForMD
         public void OnDestroy()
         {
             MiscToolsForMDMod.indicator = null;
+            InstancesManager.RemoveInstance<GameStatisticsProvider>(SDK.PublicDefines.statisticProviderId);
         }
 
         internal void UpdateAccuracy()
@@ -254,15 +247,19 @@ namespace MiscToolsForMD
             float unit = 0.0001f;
             float trueAccBySelf = 1.0f;
             float trueAccInGame = 1.0f;
-            if (targetWeight > 0)
+            int actualWeightInGame = statisticsProvider.GetCurrentActualWeightInGame();
+            int targetWeightInGame = statisticsProvider.GetCurrentTargetWeightInGame();
+            if ((targetWeight > 0) && (actualWeight <= targetWeight))
             {
                 trueAccBySelf = actualWeight * 1.0f / targetWeight;
             }
-            if (targetWeightInGame > 0)
+            if ((targetWeightInGame > 0) && (actualWeightInGame <= targetWeightInGame))
             {
                 trueAccInGame = actualWeightInGame * 1.0f / targetWeightInGame;
             }
-            MiscToolsForMDMod.instance.Log("trueAccBySelf:" + trueAccBySelf + ";trueAccInGame:" + trueAccInGame);
+            MiscToolsForMDMod.instance.Log(string.Format("targetWeight:{0};actualWeight:{1}", targetWeight, actualWeight));
+            MiscToolsForMDMod.instance.Log(string.Format("targetWeightInGame:{0};actualWeightInGame:{1}", targetWeightInGame, actualWeightInGame));
+            MiscToolsForMDMod.instance.Log(string.Format("trueAccBySelf:{0};trueAccInGame:{1}", trueAccBySelf, trueAccInGame));
             float trueAcc = MiscToolsForMDMod.config.indicator.ap.manual ? trueAccBySelf : trueAccInGame;
             float acc = Mathf.RoundToInt(trueAcc / unit) * unit;
             // See Assets.Scripts.GameCore.HostComponent.TaskStageTarget.GetAccuracy
@@ -273,7 +270,7 @@ namespace MiscToolsForMD
             accuracyText = string.Format("{0:P}", acc);
             if (acc < 1f && acc >= 0f)
             {
-                if (isMiss || (Singleton<TaskStageTarget>.instance.GetMiss() > 0))
+                if (statisticsProvider.skippedNum > 0 || (Singleton<TaskStageTarget>.instance.GetMiss() > 0))
                 {
                     accuracyStyle.normal.textColor = missColor;
                 }
@@ -282,13 +279,9 @@ namespace MiscToolsForMD
                     accuracyStyle.normal.textColor = greatColor;
                 }
             }
-            else if (acc == 1f)
-            {
-                accuracyStyle.normal.textColor = apColor;
-            }
             else
             {
-                accuracyStyle.normal.textColor = errColor;
+                accuracyStyle.normal.textColor = apColor;
             }
         }
 

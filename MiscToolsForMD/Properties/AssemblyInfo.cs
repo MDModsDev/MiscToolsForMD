@@ -1,3 +1,4 @@
+using System.Reflection;
 using MelonLoader;
 using System.Runtime.InteropServices;
 
@@ -17,3 +18,8 @@ using System.Runtime.InteropServices;
 
 [assembly: MelonInfo(typeof(MiscToolsForMD.MiscToolsForMDMod), "MiscToolsForMD", "1.0.0", "MDModsDev", "https://github.com/MDModsDev/MiscToolsForMD")]
 [assembly: MelonGame("PeroPeroGames", "MuseDash")]
+[assembly: AssemblyTitle("MiscToolsForMD")]
+[assembly: AssemblyDescription("MiscToolsForMD - a mod for Rythem Game Muse Dash")]
+[assembly: AssemblyCompany("MDModsDev")]
+[assembly: AssemblyVersion("1.0.0.0")]
+[assembly: AssemblyFileVersion("1.0.0.0")]
