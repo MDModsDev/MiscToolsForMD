@@ -12,10 +12,12 @@ namespace MiscToolsForMD.MOD
 {
     public class PublicDefines
     {
+        public static readonly string id = "MiscToolsForMD.MOD";
     }
 
     internal class InternalDefines
     {
+        public static readonly string configPath = Path.Combine(SDK.PublicDefines.basePath, "MiscToolsForMD.json");
     }
 
     internal enum ControlType

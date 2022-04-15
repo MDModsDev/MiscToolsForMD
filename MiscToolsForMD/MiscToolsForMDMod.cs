@@ -31,12 +31,12 @@ namespace MiscToolsForMD
 
         public override void OnApplicationLateStart()
         {
-            InstancesManager.GetInstance<AttributeChecker>("attrChecker", out _).CheckAll(LoggerInstance);
-            if (File.Exists(SDK.PublicDefines.configPath))
+            InstancesManager.GetInstance<SDK.SDK>(SDK.PublicDefines.id, out _, true).InitSDK(HarmonyInstance, LoggerInstance);
+            if (File.Exists(MOD.InternalDefines.configPath))
             {
                 try
                 {
-                    config = JsonConvert.DeserializeObject<Config>(File.ReadAllText(SDK.PublicDefines.configPath));
+                    config = JsonConvert.DeserializeObject<Config>(File.ReadAllText(MOD.InternalDefines.configPath)); ;
                 }
                 catch (Exception ex)
                 {
@@ -208,7 +208,7 @@ namespace MiscToolsForMD
                             case TaskResult.Miss:
                                 if (musicData.noteData.type == (uint)NoteType.Hide)
                                 {
-                                    instance.statisticsProvider.skippedNum++;
+                                    instance.statisticsProvider.AddSkippedNum(); ;
                                     instance.Log("A ghost note is missed");
                                 }
                                 else
@@ -233,7 +233,6 @@ namespace MiscToolsForMD
             instance.Log("result:" + result);
             if (result == (int)TaskResult.None)
             {
-                instance.statisticsProvider.skippedNum++;
                 indicator.targetWeight += 2;
                 indicator.UpdateAccuracy();
                 instance.Log("Missing Heart/Music");
@@ -245,7 +244,7 @@ namespace MiscToolsForMD
             instance.Log("value:" + value);
             if (value == 1)
             {
-                instance.statisticsProvider.skippedNum++;
+                instance.statisticsProvider.AddSkippedNum();
                 indicator.targetWeight += 2;
                 indicator.UpdateAccuracy();
                 instance.Log("Missing normal note.");
@@ -272,8 +271,8 @@ namespace MiscToolsForMD
         private void SaveConfig()
         {
             string jsonStr = JsonConvert.SerializeObject(config, Formatting.Indented);
-            Directory.CreateDirectory(Path.GetDirectoryName(SDK.PublicDefines.configPath));
-            File.WriteAllText(SDK.PublicDefines.configPath, jsonStr);
+            Directory.CreateDirectory(Path.GetDirectoryName(MOD.InternalDefines.configPath));
+            File.WriteAllText(MOD.InternalDefines.configPath, jsonStr);
         }
     }
 }

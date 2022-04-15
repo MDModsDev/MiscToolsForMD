@@ -1,7 +1,6 @@
 ﻿using MelonLoader;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 
@@ -89,8 +88,9 @@ namespace MiscToolsForMD.SDK
         public static readonly string gamePath = Directory.GetCurrentDirectory();
         public static readonly string dataPath = Path.Combine(gamePath, "UserData");
         public static readonly string basePath = Path.Combine(dataPath, "MiscToolsForMD");
-        public static readonly string configPath = Path.Combine(basePath, "MiscToolsForMD.json");
         public static readonly string statisticProviderId = "currentStatistics";
+        public static readonly string attrCheckerId = "attrChecker";
+        public static readonly string id = "MiscToolsForMD.SDK";
     }
 
     public class AttributeChecker : ISingleOnly
@@ -156,22 +156,29 @@ namespace MiscToolsForMD.SDK
 
         public override void PrintSelf(string methodInfo, MelonLogger.Instance loggerInstance = null)
         {
+            string fullMsg = string.Format("{0}: Fixme: {1}", methodInfo, msg);
             if (loggerInstance == null)
             {
-                string formattedTime = DateTime.Now.ToString("HH:mm:ss.fff");
-
-                Console.Write("[");
-                ConsoleColor consoleColor = Console.ForegroundColor;
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.Write(formattedTime);
-                Console.ForegroundColor = consoleColor;
-                Console.Write("] [");
-                Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.Write(InternalDefines.harmonyId);
-                Console.ForegroundColor = consoleColor;
-                Console.WriteLine(string.Format("] {0}: Fixme: {1}", methodInfo, msg));
+                WriteLogHeader();
+                Console.WriteLine(fullMsg);
             }
-            loggerInstance?.Msg(string.Format("[{0}] {1}: Fixme: {2}", InternalDefines.harmonyId, methodInfo, msg));
+            loggerInstance?.Msg(fullMsg);
+        }
+
+        private static void WriteLogHeader()
+        {
+            string formattedTime = DateTime.Now.ToString("HH:mm:ss.fff");
+
+            Console.Write("[");
+            ConsoleColor consoleColor = Console.ForegroundColor;
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.Write(formattedTime);
+            Console.ForegroundColor = consoleColor;
+            Console.Write("] [");
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.Write(PublicDefines.id);
+            Console.ForegroundColor = consoleColor;
+            Console.Write("] ");
         }
     }
 
@@ -182,6 +189,6 @@ namespace MiscToolsForMD.SDK
 
     internal class InternalDefines
     {
-        public static readonly string harmonyId = "MiscToolsForMD.SDK";
+        public static readonly string configPath = Path.Combine(PublicDefines.basePath, "MiscToolsForMD.SDK.json");
     }
 }

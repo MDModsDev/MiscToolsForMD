@@ -34,7 +34,7 @@ namespace MiscToolsForMD.MOD
 
         public void Start()
         {
-            statisticsProvider = InstancesManager.GetInstance<GameStatisticsProvider>(SDK.PublicDefines.statisticProviderId, out _);
+            statisticsProvider = InstancesManager.GetInstance<GameStatisticsProvider>(SDK.PublicDefines.statisticProviderId, out _, true);
             MusicDisplayInfo musicDisplayInfo = statisticsProvider.GetMusicDisplayInfo();
             MiscToolsForMDMod.instance.Log(string.Format("Song name:{0};author:{1}", musicDisplayInfo.musicName, musicDisplayInfo.authorName));
             if (MiscToolsForMDMod.config.indicator.ap.enabled || MiscToolsForMDMod.config.indicator.key.enabled)
@@ -270,7 +270,7 @@ namespace MiscToolsForMD.MOD
             accuracyText = string.Format("{0:P}", acc);
             if (acc < 1f && acc >= 0f)
             {
-                if (statisticsProvider.skippedNum > 0 || (Singleton<TaskStageTarget>.instance.GetMiss() > 0))
+                if (statisticsProvider.IsPlayerSkipped() || (Singleton<TaskStageTarget>.instance.GetMiss() > 0))
                 {
                     accuracyStyle.normal.textColor = missColor;
                 }

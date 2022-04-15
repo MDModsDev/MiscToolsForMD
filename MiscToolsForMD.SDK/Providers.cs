@@ -1,5 +1,6 @@
 ﻿using Assets.Scripts.Database;
 using Assets.Scripts.GameCore.HostComponent;
+using Assets.Scripts.GameCore.Managers;
 using Assets.Scripts.PeroTools.Commons;
 using Assets.Scripts.PeroTools.Managers;
 using FormulaBase;
@@ -18,17 +19,17 @@ namespace MiscToolsForMD.SDK
 {
     public class GameStatisticsProvider : ISingleOnly
     {
-        private static GameStatisticsProvider instance;
+        private static int skippedNum = 0;
         private static readonly List<MusicData> musicDatas = new List<MusicData>();
         private int recordedMaxId = 0;
-        private string id = "";
-        public int skippedNum = 0;
+        private string id;
 
         /// <summary>
         /// Get controller keys in game config.
         /// </summary>
         /// <returns>
         /// A list contains all the key name's string.
+        /// Only include Fever key when AutoFever is off and set a Fever key.
         /// <seealso cref="KeyCode"/>
         /// <see cref="https://docs.unity3d.com/ScriptReference/KeyCode.html"/>
         /// </returns>
@@ -157,7 +158,7 @@ namespace MiscToolsForMD.SDK
         /// Current target weight, calculated from MusicData.
         /// <seealso cref="StageBattleComponent.GetMusicData"/>
         /// </returns>
-        [Fixme("Improve validMusicDatascalculation")]
+        [Fixme("Improve validMusicDatas calculation.")]
         public int GetCurrentTargetWeightByIdx(int idx)
         {
             // See Assets.Scripts.GameCore.HostComponent.TaskStageTarget.GetTrueAccuracyNew
@@ -171,32 +172,50 @@ namespace MiscToolsForMD.SDK
         }
 
         /// <summary>
+        /// Return a bool value flag describes if player has skipped some note.
+        /// </summary>
+        /// <returns>
+        /// If player has skipped some note.
+        /// </returns>
+        public bool IsPlayerSkipped()
+        {
+            return skippedNum > 0;
+        }
+
+        /// <summary>
         /// Export note info to a JSON document.
         /// </summary>
         /// <param name="path">
         /// Where to save JSON document.
         /// </param>
-        /// <param name="relativeToModBase">
-        /// If path related to MiscToolsForMD's base directory
-        /// </param>
-        public void ExportMusicDatasTo(string path, bool relativeToModBase = false)
+        public void ExportMusicDatasTo(string path)
         {
-            if (relativeToModBase)
-            {
-                path = Path.Combine(PublicDefines.basePath, path);
-            }
             string musicDatasJsonStr = JsonConvert.SerializeObject(musicDatas, Formatting.Indented);
             Directory.CreateDirectory(Path.GetDirectoryName(path));
             File.WriteAllText(path, musicDatasJsonStr);
         }
 
+        [Fixme("Calculate skippedNum correctly by provider and remove this method.")]
+        [Obsolete(
+            "This is a temp workaround for MiscToolsForMD and will be removed in the future. " +
+            "Everyone using this should remove related code. " +
+            "The skippedNum will be caclulated automatically by provider.")]
+        public void AddSkippedNum(int num = 1)
+        {
+            skippedNum += num;
+        }
+
+        // --------------------------------- API Ends ---------------------------------
+        // Methods bellow should not be used by user.
         public GameStatisticsProvider()
         {
-            instance = this;
+            HarmonyLib.Harmony harmony = InstancesManager.GetHarmony();
             MethodInfo init = typeof(StageBattleComponent).GetMethod(nameof(StageBattleComponent.OnLoadComplete));
             MethodInfo initPatch = typeof(GameStatisticsProvider).GetMethod(nameof(GameStatisticsProvider.RefreshMusicDatas), BindingFlags.Static | BindingFlags.NonPublic);
-            HarmonyLib.Harmony harmony = new HarmonyLib.Harmony(InternalDefines.harmonyId);
             harmony.Patch(init, null, new HarmonyMethod(initPatch));
+            MethodInfo onNoteResult = typeof(StatisticsManager).GetMethod(nameof(StatisticsManager.OnNoteResult));
+            MethodInfo onNoteResultPatch = typeof(GameStatisticsProvider).GetMethod(nameof(GameStatisticsProvider.AddSkippedNumByResult), BindingFlags.Static | BindingFlags.NonPublic);
+            harmony.Patch(onNoteResult, null, new HarmonyMethod(onNoteResultPatch));
         }
 
         public string GetID()
@@ -212,10 +231,9 @@ namespace MiscToolsForMD.SDK
         public void OnRemove()
         {
             musicDatas.Clear();
-            id = "";
+            id = null;
             recordedMaxId = 0;
             skippedNum = 0;
-            instance = null;
         }
 
         private static void RefreshMusicDatas()
@@ -224,6 +242,14 @@ namespace MiscToolsForMD.SDK
             foreach (MusicData musicData in Singleton<StageBattleComponent>.instance.GetMusicData())
             {
                 musicDatas.Add(musicData);
+            }
+        }
+
+        private static void AddSkippedNumByResult(int result)
+        {
+            if (result == (int)TaskResult.None)
+            {
+                skippedNum++;
             }
         }
     }
