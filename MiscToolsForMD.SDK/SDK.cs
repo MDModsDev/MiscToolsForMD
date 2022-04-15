@@ -46,19 +46,8 @@ namespace MiscToolsForMD.SDK
             return (T)instance;
         }
 
-        /// <summary>
-        /// Remove instance globally.
-        /// </summary>
-        /// <typeparam name="T">
-        /// Any object implements ISingleOnly
-        /// </typeparam>
-        /// <param name="id">
-        /// The ID of the object you want to destroy.
-        /// </param>
-        /// <returns>
-        /// If destroy successfully.
-        /// </returns>
-        public static bool RemoveInstance<T>(string id)
+        internal static bool RemoveInstance<T>(string id)
+            where T : ISingleOnly, new()
         {
             ISingleOnly instance = instances.Find(iSingleOnly => iSingleOnly.GetID() == id);
             if ((instance != null) && (instance is T))
@@ -82,7 +71,9 @@ namespace MiscToolsForMD.SDK
         {
             if (harmonyInstance == null)
             {
-                throw new NullReferenceException("No available Harmony Instance, have you run InitSDK() method in your mod's entrance?");
+                throw new NullReferenceException(
+                    "No available Harmony Instance, " +
+                    "have you run InitSDK() method in your mod's entrance?");
             }
             return harmonyInstance;
         }
@@ -102,7 +93,7 @@ namespace MiscToolsForMD.SDK
         /// <summary>
         /// Init SDK.
         /// You have to run it in your mod's entrance.
-        /// We will use first Harmony instance for SDK.
+        /// We will use first Harmony instance for SDK or create one.
         /// </summary>
         /// <param name="harmony">
         /// The Harmony instance of your MOD, we will create one which ID is MiscToolsForMD.SDK if it is null.
@@ -110,14 +101,16 @@ namespace MiscToolsForMD.SDK
         /// <param name="loggerInstance">
         /// MelonLoader's LoggerInstance, will use Console.WriteLine if it is null.
         /// </param>
-        public void InitSDK(HarmonyLib.Harmony harmony = null, MelonLogger.Instance loggerInstance = null)
+        public static SDK InitSDK(HarmonyLib.Harmony harmony = null, MelonLogger.Instance loggerInstance = null)
         {
             if (harmony == null)
             {
-                harmony = new HarmonyLib.Harmony(GetID());
+                harmony = new HarmonyLib.Harmony(PublicDefines.id);
             }
             InstancesManager.AddHarmonyInstance(harmony);
             InstancesManager.GetInstance<AttributeChecker>(PublicDefines.attrCheckerId, out _, true).CheckAll(loggerInstance);
+            InstancesManager.GetInstance<GameStatisticsProvider>(PublicDefines.statisticProviderId, out _, true);
+            return InstancesManager.GetInstance<SDK>(PublicDefines.id, out _, true);
         }
 
         public void SetID(string id)
@@ -145,6 +138,11 @@ namespace MiscToolsForMD.SDK
         /// Author of the song
         /// </summary>
         public string authorName;
+
+        public override string ToString()
+        {
+            return string.Format("{0}-{1}", musicName, authorName);
+        }
     }
 
     /// <summary>

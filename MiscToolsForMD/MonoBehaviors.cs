@@ -1,5 +1,4 @@
 ﻿using Assets.Scripts.Database;
-using Assets.Scripts.GameCore.HostComponent;
 using Assets.Scripts.PeroTools.Commons;
 using FormulaBase;
 using MiscToolsForMD.SDK;
@@ -16,14 +15,12 @@ namespace MiscToolsForMD.MOD
     {
         private readonly Dictionary<string, string> keyDisplayNames = SDK.PublicDefines.keyDisplayNames;
         private readonly List<KeyInfo> keyInfos = new List<KeyInfo>();
-        private GameStatisticsProvider statisticsProvider;
+        private readonly GameStatisticsProvider statisticsProvider = InstancesManager.GetInstance<GameStatisticsProvider>(SDK.PublicDefines.statisticProviderId, out _);
         private string accuracyText = "", lyricContent = "";
         private List<Lyric> lyrics;
         private Rect windowRect, lyricWindowRect;
         private GUIStyle accuracyStyle, labelStyle, lyricStyle;
         private Color32 apColor, displayColor, pressingColor, missColor, greatColor;
-        internal int actualWeight = 0;
-        internal int targetWeight = 0;
         internal Lang lang = Lang.GetLang();
 
         public Indicator(IntPtr intPtr) : base(intPtr)
@@ -34,7 +31,6 @@ namespace MiscToolsForMD.MOD
 
         public void Start()
         {
-            statisticsProvider = InstancesManager.GetInstance<GameStatisticsProvider>(SDK.PublicDefines.statisticProviderId, out _, true);
             MusicDisplayInfo musicDisplayInfo = statisticsProvider.GetMusicDisplayInfo();
             MiscToolsForMDMod.instance.Log(string.Format("Song name:{0};author:{1}", musicDisplayInfo.musicName, musicDisplayInfo.authorName));
             if (MiscToolsForMDMod.config.indicator.ap.enabled || MiscToolsForMDMod.config.indicator.key.enabled)
@@ -239,7 +235,6 @@ namespace MiscToolsForMD.MOD
         public void OnDestroy()
         {
             MiscToolsForMDMod.indicator = null;
-            InstancesManager.RemoveInstance<GameStatisticsProvider>(SDK.PublicDefines.statisticProviderId);
         }
 
         internal void UpdateAccuracy()
@@ -249,6 +244,8 @@ namespace MiscToolsForMD.MOD
             float trueAccInGame = 1.0f;
             int actualWeightInGame = statisticsProvider.GetCurrentActualWeightInGame();
             int targetWeightInGame = statisticsProvider.GetCurrentTargetWeightInGame();
+            int actualWeight = statisticsProvider.GetCurrentActualWeightBySelf();
+            int targetWeight = statisticsProvider.GetCurrentTargetWeightBySelf();
             if ((targetWeight > 0) && (actualWeight <= targetWeight))
             {
                 trueAccBySelf = actualWeight * 1.0f / targetWeight;
@@ -270,7 +267,7 @@ namespace MiscToolsForMD.MOD
             accuracyText = string.Format("{0:P}", acc);
             if (acc < 1f && acc >= 0f)
             {
-                if (statisticsProvider.IsPlayerSkipped() || (Singleton<TaskStageTarget>.instance.GetMiss() > 0))
+                if (statisticsProvider.IsStrictlyMissed())
                 {
                     accuracyStyle.normal.textColor = missColor;
                 }

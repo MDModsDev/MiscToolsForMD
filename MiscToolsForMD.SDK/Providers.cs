@@ -1,6 +1,8 @@
 ﻿using Assets.Scripts.Database;
 using Assets.Scripts.GameCore.HostComponent;
 using Assets.Scripts.GameCore.Managers;
+using Assets.Scripts.PeroTools.Nice.Datas;
+using Assets.Scripts.PeroTools.Nice.Interface;
 using Assets.Scripts.PeroTools.Commons;
 using Assets.Scripts.PeroTools.Managers;
 using FormulaBase;
@@ -19,23 +21,25 @@ namespace MiscToolsForMD.SDK
 {
     public class GameStatisticsProvider : ISingleOnly
     {
-        private static int skippedNum = 0;
         private static readonly List<MusicData> musicDatas = new List<MusicData>();
-        private int recordedMaxId = 0;
+        private static int targetWeightBySelf = 0;
+        private static int actualWeightBySelf = 0;
+        private static int skippedNum = 0;
+        private static int recordedMaxId = 0;
         private string id;
 
         /// <summary>
-        /// Get controller keys in game config.
+        /// Get controller keys in game config. See
+        /// <seealso cref="Assets.Scripts.GameCore.Controller.StandloneController.GetDefaultKeyList"/>
         /// </summary>
         /// <returns>
         /// A list contains all the key name's string.
-        /// Only include Fever key when AutoFever is off and set a Fever key.
-        /// <seealso cref="KeyCode"/>
+        /// Only include Fever key when AutoFever is off and set a Fever key. See
+        /// <seealso cref="KeyCode"/> and
         /// <see cref="https://docs.unity3d.com/ScriptReference/KeyCode.html"/>
         /// </returns>
         public List<string> GetControlKeys()
         {
-            // See Assets.Scripts.GameCore.Controller.StandloneController.GetDefaultKeyList
             string text = "{\"Keylist\":{ \"Custom\":[{\"Key\":\"None\",\"Type\":\"BattleAir\"},{\"Key\":\"None\",\"Type\":\"BattleAir\"}," +
                 "{\"Key\":\"None\",\"Type\":\"BattleAir\"},{\"Key\":\"None\",\"Type\":\"BattleAir\"},{\"Key\":\"None\",\"Type\":\"BattleGround\"}," +
                 "{\"Key\":\"None\",\"Type\":\"BattleGround\"},{\"Key\":\"None\",\"Type\":\"BattleGround\"},{\"Key\":\"None\",\"Type\":\"BattleGround\"}]}," +
@@ -61,6 +65,7 @@ namespace MiscToolsForMD.SDK
 
         /// <summary>
         /// Get music info of current playing music.
+        /// <seealso cref="StatisticsManager.OnBattleStart">
         /// </summary>
         /// <returns>
         /// A MusicDisplayInfo object
@@ -68,24 +73,12 @@ namespace MiscToolsForMD.SDK
         /// </returns>
         public MusicDisplayInfo GetMusicDisplayInfo()
         {
-            // See SetSelectedMusicNameTxt.GetSelectedMusicName
-            // and SetSelectedMusicNameTxt.GetSelectedMusicAuthor
             string musicName, musicAuthor;
-            if (DataHelper.selectedAlbumUid != "collection" || DataHelper.selectedMusicIndex < 0)
-            {
-                musicName = Singleton<ConfigManager>.instance.GetConfigStringValue(DataHelper.selectedAlbumName, "uid", "name", DataHelper.selectedMusicUidFromInfoList);
-                musicAuthor = Singleton<ConfigManager>.instance.GetConfigStringValue(DataHelper.selectedAlbumName, "uid", "author", DataHelper.selectedMusicUidFromInfoList);
-            }
-            else if (DataHelper.collections.Count == 0 || DataHelper.collections.Count < DataHelper.selectedMusicIndex)
-            {
-                musicName = "?????";
-                musicAuthor = "???";
-            }
-            else
-            {
-                musicName = Singleton<ConfigManager>.instance.GetConfigStringValue(DataHelper.selectedAlbumName, "uid", "name", DataHelper.collections[DataHelper.selectedMusicIndex]);
-                musicAuthor = Singleton<ConfigManager>.instance.GetConfigStringValue(DataHelper.selectedAlbumName, "uid", "author", DataHelper.collections[DataHelper.selectedMusicIndex]);
-            }
+            SingletonDataObject singletonDataObject = Singleton<DataManager>.instance["Account"];
+            string selectedAlbumName = VariableUtils.GetResult<string>(singletonDataObject["SelectedAlbumName"]);
+            string selectedMusicUid = VariableUtils.GetResult<string>(singletonDataObject["SelectedMusicUid"]);
+            musicAuthor = Singleton<ConfigManager>.instance.GetConfigStringValue(selectedAlbumName, "uid", "author", selectedMusicUid);
+            musicName = VariableUtils.GetResult<string>(Singleton<DataManager>.instance["Account"]["SelectedMusicName"]);
             return new MusicDisplayInfo()
             {
                 musicName = musicName,
@@ -94,8 +87,8 @@ namespace MiscToolsForMD.SDK
         }
 
         /// <summary>
-        /// Get current actual weight.
-        /// Accuracy is target weight divides actual weight.
+        /// Get current actual weight. See
+        /// <seealso cref="TaskStageTarget.GetTrueAccuracyNew"/>
         /// </summary>
         /// <returns>
         /// Current actual weight recorded by game.
@@ -103,7 +96,6 @@ namespace MiscToolsForMD.SDK
         /// </returns>
         public int GetCurrentActualWeightInGame()
         {
-            // See Assets.Scripts.GameCore.HostComponent.TaskStageTarget.GetTrueAccuracyNew
             TaskStageTarget targetInstance = Singleton<TaskStageTarget>.instance;
             int actualPerfectNum = targetInstance.GetHitCountByResult(TaskResult.Prefect);
             int actualGreatNum = targetInstance.GetHitCountByResult(TaskResult.Great);
@@ -114,17 +106,16 @@ namespace MiscToolsForMD.SDK
         }
 
         /// <summary>
-        /// Get current target weight.
-        /// Accuracy is target weight divides actual weight.
+        /// Get current target weight calculated from actual weight. See
+        /// <seealso cref="TaskStageTarget.GetTrueAccuracyNew"/>
         /// </summary>
         /// <returns>
-        /// Current target weight,calculated from actual weight.
+        /// Current target weight.
         /// NOTE: may not equals to game's value.
         /// </returns>
         [Fixme("Improve skippedNum calculation.")]
         public int GetCurrentTargetWeightInGame()
         {
-            // See Assets.Scripts.GameCore.HostComponent.TaskStageTarget.GetTrueAccuracyNew
             TaskStageTarget targetInstance = Singleton<TaskStageTarget>.instance;
             int actualPerfectNum = targetInstance.GetHitCountByResult(TaskResult.Prefect);
             int actualGreatNum = targetInstance.GetHitCountByResult(TaskResult.Great);
@@ -137,7 +128,6 @@ namespace MiscToolsForMD.SDK
 
         /// <summary>
         /// Get current weight, this is charactor's raw result(not changed by game).
-        /// Accuracy is target weight divides actual weight.
         /// </summary>
         /// <returns>
         /// Current actual weight, has not been changed by game.
@@ -148,20 +138,19 @@ namespace MiscToolsForMD.SDK
         }
 
         /// <summary>
-        /// Get current target weight.
-        /// Accuracy is target weight divides actual weight.
+        /// Get current target weight calculated from MusicData. See
+        /// <seealso cref="TaskStageTarget.GetTrueAccuracyNew"/>
         /// </summary>
         /// <param name="idx">
         /// Current note's idx, you can get it from many game's method such as SetPlayResult...
         /// </param>
         /// <returns>
-        /// Current target weight, calculated from MusicData.
+        /// Current target weight. See
         /// <seealso cref="StageBattleComponent.GetMusicData"/>
         /// </returns>
         [Fixme("Improve validMusicDatas calculation.")]
-        public int GetCurrentTargetWeightByIdx(int idx)
+        public int GetCurrentTargetWeightInGameByIdx(int idx)
         {
-            // See Assets.Scripts.GameCore.HostComponent.TaskStageTarget.GetTrueAccuracyNew
             int validIdx = idx > recordedMaxId ? idx : recordedMaxId;
             List<MusicData> validMusicDatas = musicDatas.FindAll(musicData => musicData.objId <= validIdx && musicData.objId > 0);
             int touchNum = validMusicDatas.Count(musicData => musicData.noteData.type == (uint)NoteType.Hp || musicData.noteData.type == (uint)NoteType.Music);
@@ -169,6 +158,28 @@ namespace MiscToolsForMD.SDK
             int blockNum = validMusicDatas.Count(musicData => musicData.noteData.type == (uint)NoteType.Block);
             recordedMaxId = idx > recordedMaxId ? idx : recordedMaxId;
             return (touchNum + normalNum + blockNum) * 2;
+        }
+
+        /// <summary>
+        /// Get current actual weight calculated by provider.
+        /// </summary>
+        /// <returns>
+        /// Current actual weight.
+        /// </returns>
+        public int GetCurrentActualWeightBySelf()
+        {
+            return actualWeightBySelf;
+        }
+
+        /// <summary>
+        /// Get current target weight calculated by provider.
+        /// </summary>
+        /// <returns>
+        /// Current target weight.
+        /// </returns>
+        public int GetCurrentTargetWeightBySelf()
+        {
+            return targetWeightBySelf;
         }
 
         /// <summary>
@@ -180,6 +191,17 @@ namespace MiscToolsForMD.SDK
         public bool IsPlayerSkipped()
         {
             return skippedNum > 0;
+        }
+
+        /// <summary>
+        /// Return a bool value flag describes if player has skipped some note or game thinks player is Missed.
+        /// </summary>
+        /// <returns>
+        /// If player strictly missed.
+        /// </returns>
+        public bool IsStrictlyMissed()
+        {
+            return IsPlayerSkipped() || (Singleton<TaskStageTarget>.instance.GetMiss() > 0);
         }
 
         /// <summary>
@@ -195,27 +217,25 @@ namespace MiscToolsForMD.SDK
             File.WriteAllText(path, musicDatasJsonStr);
         }
 
-        [Fixme("Calculate skippedNum correctly by provider and remove this method.")]
-        [Obsolete(
-            "This is a temp workaround for MiscToolsForMD and will be removed in the future. " +
-            "Everyone using this should remove related code. " +
-            "The skippedNum will be caclulated automatically by provider.")]
-        public void AddSkippedNum(int num = 1)
-        {
-            skippedNum += num;
-        }
-
         // --------------------------------- API Ends ---------------------------------
         // Methods bellow should not be used by user.
+
         public GameStatisticsProvider()
         {
             HarmonyLib.Harmony harmony = InstancesManager.GetHarmony();
-            MethodInfo init = typeof(StageBattleComponent).GetMethod(nameof(StageBattleComponent.OnLoadComplete));
+            MethodInfo init = typeof(StatisticsManager).GetMethod(nameof(StatisticsManager.OnBattleStart));
             MethodInfo initPatch = typeof(GameStatisticsProvider).GetMethod(nameof(GameStatisticsProvider.RefreshMusicDatas), BindingFlags.Static | BindingFlags.NonPublic);
             harmony.Patch(init, null, new HarmonyMethod(initPatch));
             MethodInfo onNoteResult = typeof(StatisticsManager).GetMethod(nameof(StatisticsManager.OnNoteResult));
-            MethodInfo onNoteResultPatch = typeof(GameStatisticsProvider).GetMethod(nameof(GameStatisticsProvider.AddSkippedNumByResult), BindingFlags.Static | BindingFlags.NonPublic);
+            MethodInfo onNoteResultPatch = typeof(GameStatisticsProvider).GetMethod(nameof(GameStatisticsProvider.AddSkippedNumWhenSkippedMusicOrHeart), BindingFlags.Static | BindingFlags.NonPublic);
             harmony.Patch(onNoteResult, null, new HarmonyMethod(onNoteResultPatch));
+            MethodInfo setPlayResult = typeof(BattleEnemyManager).GetMethod(nameof(BattleEnemyManager.SetPlayResult));
+            MethodInfo setPlayResultPatch = typeof(GameStatisticsProvider).GetMethod(nameof(GameStatisticsProvider.SetWeightsByResult), BindingFlags.Static | BindingFlags.NonPublic);
+            harmony.Patch(setPlayResult, null, new HarmonyMethod(setPlayResultPatch));
+            // TODO:Fix patch target
+            MethodInfo addComboMiss = typeof(StageBattleComponent).GetMethod(nameof(StageBattleComponent.SetCombo));
+            MethodInfo addComboMissPatch = typeof(GameStatisticsProvider).GetMethod(nameof(GameStatisticsProvider.AddSkippedNumWhenSkippedNormalNote), BindingFlags.Static | BindingFlags.NonPublic);
+            harmony.Patch(addComboMiss, null, new HarmonyMethod(addComboMissPatch));
         }
 
         public string GetID()
@@ -230,12 +250,21 @@ namespace MiscToolsForMD.SDK
 
         public void OnRemove()
         {
-            musicDatas.Clear();
-            id = null;
             recordedMaxId = 0;
             skippedNum = 0;
+            actualWeightBySelf = 0;
+            targetWeightBySelf = 0;
+            musicDatas.Clear();
+            id = null;
         }
 
+        private static void AddSkippedNum(int value = 1)
+        {
+            skippedNum += value;
+            targetWeightBySelf += 2 * value;
+        }
+
+        // Harmony patches to update statistics:
         private static void RefreshMusicDatas()
         {
             musicDatas.Clear();
@@ -243,13 +272,115 @@ namespace MiscToolsForMD.SDK
             {
                 musicDatas.Add(musicData);
             }
+            recordedMaxId = 0;
+            skippedNum = 0;
+            actualWeightBySelf = 0;
+            targetWeightBySelf = 0;
         }
 
-        private static void AddSkippedNumByResult(int result)
+        [Fixme("Find correct patch target")]
+        private static void AddSkippedNumWhenSkippedNormalNote(int combo, bool addCount)
+        {
+            if (combo == 0)
+            {
+                AddSkippedNum();
+            }
+        }
+
+        private static void AddSkippedNumWhenSkippedMusicOrHeart(int result)
         {
             if (result == (int)TaskResult.None)
             {
-                skippedNum++;
+                AddSkippedNum();
+            }
+        }
+
+        private static void SetWeightsByResult(int idx, byte result, bool isMulStart, bool isMulEnd, bool isLeft)
+        {
+            // See Assets.Scripts.GameCore.HostComponent.TaskStageTarget.GetTrueAccuracyNew,
+            // Assets.Scripts.GameCore.HostComponent.TaskStageTarget.SetPlayResult
+            // and Assets.Scripts.GameCore.HostComponent.BattleEnemyManager.SetPlayResult
+            // AddComboMiss -> SetPlayResult -> OnNoteResult (Not sure)
+            TaskResult resultEasier = (TaskResult)result;
+            if (!isMulStart)
+            {
+                if (resultEasier <= TaskResult.None)
+                {
+                    return;
+                }
+                MusicData musicData = Singleton<StageBattleComponent>.instance.GetMusicDataByIdx(idx);
+                TaskResult playResult = (TaskResult)Singleton<BattleEnemyManager>.instance.GetPlayResult(idx);
+                if (musicData.isLongPressing)
+                {
+                    return;
+                }
+                if (!musicData.noteData.addCombo)
+                {
+                    targetWeightBySelf += 2;
+                    if (resultEasier == TaskResult.Prefect)
+                    {
+                        actualWeightBySelf += 2;
+                    }
+                }
+                else if (musicData.isLongPressEnd || musicData.isLongPressStart)
+                {
+                    targetWeightBySelf += 2;
+                    switch (resultEasier)
+                    {
+                        case TaskResult.Prefect:
+                            actualWeightBySelf += 2;
+                            break;
+
+                        case TaskResult.Great:
+                            actualWeightBySelf += 1;
+                            break;
+                    }
+                }
+                else if (playResult == resultEasier || isMulEnd || musicData.doubleIdx > 0)
+                // playResult has bee recorded when run this method, that is the difference with TaskStageTarget.SetPlayResult
+                {
+                    if (musicData.isDouble)
+                    {
+                        TaskResult playResult2 = (TaskResult)Singleton<BattleEnemyManager>.instance.GetPlayResult(musicData.doubleIdx);
+                        if (playResult2 != TaskResult.None)
+                        {
+                            targetWeightBySelf += 4;
+                            if (
+                                (playResult2 == TaskResult.Prefect && resultEasier == TaskResult.Great) ||
+                                (playResult2 == TaskResult.Great && resultEasier == TaskResult.Prefect) ||
+                                (playResult2 == TaskResult.Great && resultEasier == TaskResult.Great)
+                                )
+                            {
+                                actualWeightBySelf += 2;
+                            }
+                            else if (resultEasier == TaskResult.Prefect && playResult2 == TaskResult.Prefect)
+                            {
+                                actualWeightBySelf += 4;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        targetWeightBySelf += 2;
+                        switch (resultEasier)
+                        {
+                            case TaskResult.Prefect:
+                                actualWeightBySelf += 2;
+                                break;
+
+                            case TaskResult.Great:
+                                actualWeightBySelf += 1;
+                                break;
+
+                            case TaskResult.Miss:
+                                if (musicData.noteData.type == (uint)NoteType.Hide)
+                                {
+                                    skippedNum++;
+                                }
+                                break;
+                        }
+                    }
+                }
             }
         }
     }

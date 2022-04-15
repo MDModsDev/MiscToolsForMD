@@ -25,18 +25,17 @@ namespace MiscToolsForMD
     {
         public static MiscToolsForMDMod instance;
         public static Indicator indicator;
-        internal List<ILyricSource> lyricSources = new List<ILyricSource>();
         internal static Config config;
-        private GameStatisticsProvider statisticsProvider;
+        internal List<ILyricSource> lyricSources = new List<ILyricSource>();
 
         public override void OnApplicationLateStart()
         {
-            InstancesManager.GetInstance<SDK.SDK>(SDK.PublicDefines.id, out _, true).InitSDK(HarmonyInstance, LoggerInstance);
+            SDK.SDK.InitSDK(HarmonyInstance, LoggerInstance);
             if (File.Exists(MOD.InternalDefines.configPath))
             {
                 try
                 {
-                    config = JsonConvert.DeserializeObject<Config>(File.ReadAllText(MOD.InternalDefines.configPath)); ;
+                    config = JsonConvert.DeserializeObject<Config>(File.ReadAllText(InternalDefines.configPath)); ;
                 }
                 catch (Exception ex)
                 {
@@ -97,7 +96,6 @@ namespace MiscToolsForMD
                 // TODO: Load other lyric source
                 lyricSources = lyricSources.OrderBy(lyricSource => lyricSource.Priority).ToList();
             }
-            statisticsProvider = InstancesManager.GetInstance<GameStatisticsProvider>(SDK.PublicDefines.statisticProviderId, out _);
             instance = this;
             LoggerInstance.Msg("MiscToolsForMD Loads Completed.");
         }
@@ -138,24 +136,16 @@ namespace MiscToolsForMD
                 instance.Log("Note type:" + (NoteType)musicData.noteData.type);
                 if (!musicData.noteData.addCombo)
                 {
-                    indicator.targetWeight += 2;
-                    if (resultEasier == TaskResult.Prefect)
-                    {
-                        indicator.actualWeight += 2;
-                    }
                     instance.Log("Note which doesn't add combo captured.");
                 }
                 else if (musicData.isLongPressEnd || musicData.isLongPressStart)
                 {
-                    indicator.targetWeight += 2;
                     switch (resultEasier)
                     {
                         case TaskResult.Prefect:
-                            indicator.actualWeight += 2;
                             break;
 
                         case TaskResult.Great:
-                            indicator.actualWeight += 1;
                             break;
 
                         default:
@@ -175,40 +165,23 @@ namespace MiscToolsForMD
                         }
                         else
                         {
-                            indicator.targetWeight += 4;
-                            if (
-                                (playResult2 == TaskResult.Prefect && resultEasier == TaskResult.Great) ||
-                                (playResult2 == TaskResult.Great && resultEasier == TaskResult.Prefect) ||
-                                (playResult2 == TaskResult.Great && resultEasier == TaskResult.Great)
-                                )
-                            {
-                                indicator.actualWeight += 2;
-                            }
-                            else if (resultEasier == TaskResult.Prefect && playResult2 == TaskResult.Prefect)
-                            {
-                                indicator.actualWeight += 4;
-                            }
                             instance.Log("Current is second note of a double-press group.");
                         }
                         instance.Log("Double-Press captured.");
                     }
                     else
                     {
-                        indicator.targetWeight += 2;
                         switch (resultEasier)
                         {
                             case TaskResult.Prefect:
-                                indicator.actualWeight += 2;
                                 break;
 
                             case TaskResult.Great:
-                                indicator.actualWeight += 1;
                                 break;
 
                             case TaskResult.Miss:
                                 if (musicData.noteData.type == (uint)NoteType.Hide)
                                 {
-                                    instance.statisticsProvider.AddSkippedNum(); ;
                                     instance.Log("A ghost note is missed");
                                 }
                                 else
@@ -233,7 +206,6 @@ namespace MiscToolsForMD
             instance.Log("result:" + result);
             if (result == (int)TaskResult.None)
             {
-                indicator.targetWeight += 2;
                 indicator.UpdateAccuracy();
                 instance.Log("Missing Heart/Music");
             }
@@ -244,8 +216,6 @@ namespace MiscToolsForMD
             instance.Log("value:" + value);
             if (value == 1)
             {
-                instance.statisticsProvider.AddSkippedNum();
-                indicator.targetWeight += 2;
                 indicator.UpdateAccuracy();
                 instance.Log("Missing normal note.");
             }
@@ -271,8 +241,8 @@ namespace MiscToolsForMD
         private void SaveConfig()
         {
             string jsonStr = JsonConvert.SerializeObject(config, Formatting.Indented);
-            Directory.CreateDirectory(Path.GetDirectoryName(MOD.InternalDefines.configPath));
-            File.WriteAllText(MOD.InternalDefines.configPath, jsonStr);
+            Directory.CreateDirectory(Path.GetDirectoryName(InternalDefines.configPath));
+            File.WriteAllText(InternalDefines.configPath, jsonStr);
         }
     }
 }
