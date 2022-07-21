@@ -96,13 +96,18 @@ namespace MiscToolsForMD.SDK
     public class AttributeChecker : ISingleOnly
     {
         private string id;
+        private bool isChecked = false;
 
         public void CheckAll()
         {
-            foreach (MethodInfo methodInfo in typeof(GameStatisticsProvider).GetMethods())
+            if (!isChecked)
             {
-                string methodFullName = string.Format("{0}.{1}", methodInfo.DeclaringType.FullName, methodInfo.Name);
-                methodInfo.GetCustomAttribute<PrintSupportedAttribute>()?.PrintSelf(methodFullName);
+                foreach (MethodInfo methodInfo in typeof(GameStatisticsProvider).GetMethods())
+                {
+                    string methodFullName = string.Format("{0}.{1}", methodInfo.DeclaringType.FullName, methodInfo.Name);
+                    methodInfo.GetCustomAttribute<PrintSupportedAttribute>()?.PrintSelf(methodFullName);
+                }
+                isChecked = true;
             }
         }
 
