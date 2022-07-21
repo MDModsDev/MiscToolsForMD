@@ -7,7 +7,8 @@ namespace MiscToolsForMD.SDK
     public class InstancesManager
     {
         private static readonly List<ISingleOnly> instances = new List<ISingleOnly>();
-        private static HarmonyLib.Harmony harmonyInstance;
+        private static readonly List<MelonMod> calledModsList = new List<MelonMod>();
+        private static HarmonyLib.Harmony harmonyInstance = new HarmonyLib.Harmony(PublicDefines.id);
 
         /// <summary>
         /// Get single instance globally.
@@ -23,11 +24,11 @@ namespace MiscToolsForMD.SDK
         /// Or we will pass ID to realID.
         /// </param>
         /// <param name="replace">
-        /// If replace existing instance.
+        /// If replace existing instance.<br/>
         /// NOTE: It is dangerous if you replace existing instance with another type. You should think twice before using it.
         /// </param>
         /// <returns>
-        /// The instance of type T (globally single).
+        /// The globally single instance of type <c>T</c>.
         /// </returns>
         public static T GetInstance<T>(string id, out string realID, bool replace = false)
             where T : ISingleOnly, new()
@@ -46,6 +47,23 @@ namespace MiscToolsForMD.SDK
             return (T)instance;
         }
 
+        internal static void AddCallerMod(MelonMod mod)
+        {
+            if (!calledModsList.Contains(mod))
+            {
+                calledModsList.Add(mod);
+            }
+        }
+
+        internal static MelonMod GetFirstMod()
+        {
+            if (calledModsList.Count == 0)
+            {
+                return null;
+            }
+            return calledModsList[0];
+        }
+
         internal static bool RemoveInstance<T>(string id)
             where T : ISingleOnly, new()
         {
@@ -57,14 +75,6 @@ namespace MiscToolsForMD.SDK
                 return true;
             }
             return false;
-        }
-
-        internal static void AddHarmonyInstance(HarmonyLib.Harmony instance)
-        {
-            if (harmonyInstance == null)
-            {
-                harmonyInstance = instance;
-            }
         }
 
         internal static HarmonyLib.Harmony GetHarmony()
@@ -91,26 +101,19 @@ namespace MiscToolsForMD.SDK
     public class SDK : ISingleOnly
     {
         /// <summary>
-        /// Init SDK.
+        /// Init SDK and get SDK instance.<br/>
         /// You have to run it in your mod's entrance.
-        /// We will use first Harmony instance for SDK or create one.
         /// </summary>
-        /// <param name="harmony">
-        /// The Harmony instance of your MOD, we will create one which ID is MiscToolsForMD.SDK if it is null.
+        /// <param name="mod">
+        /// The instance of your mod, we will use first mod instance's LoggerInstance to print our output.<br/>
+        /// Most of the time, you can pass "this" simply.
         /// </param>
-        /// <param name="loggerInstance">
-        /// MelonLoader's LoggerInstance, will use Console.WriteLine if it is null.
-        /// </param>
-        public static SDK InitSDK(HarmonyLib.Harmony harmony = null, MelonLogger.Instance loggerInstance = null)
+        public static SDK InitSDK(MelonMod mod)
         {
-            if (harmony == null)
-            {
-                harmony = new HarmonyLib.Harmony(PublicDefines.id);
-            }
-            InstancesManager.AddHarmonyInstance(harmony);
-            InstancesManager.GetInstance<AttributeChecker>(PublicDefines.attrCheckerId, out _, true).CheckAll(loggerInstance);
+            InstancesManager.GetInstance<AttributeChecker>(PublicDefines.attrCheckerId, out _, true).CheckAll();
             InstancesManager.GetInstance<GameStatisticsProvider>(PublicDefines.statisticProviderId, out _, true);
-            return InstancesManager.GetInstance<SDK>(PublicDefines.id, out _, true);
+            InstancesManager.AddCallerMod(mod);
+            return InstancesManager.GetInstance<SDK>(PublicDefines.id, out _);
         }
 
         public void SetID(string id)

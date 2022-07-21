@@ -30,8 +30,8 @@ namespace MiscToolsForMD
 
         public override void OnApplicationLateStart()
         {
-            SDK.SDK.InitSDK(HarmonyInstance, LoggerInstance);
-            if (File.Exists(MOD.InternalDefines.configPath))
+            SDK.SDK.InitSDK(this);
+            if (File.Exists(InternalDefines.configPath))
             {
                 try
                 {

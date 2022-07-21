@@ -97,12 +97,12 @@ namespace MiscToolsForMD.SDK
     {
         private string id;
 
-        public void CheckAll(MelonLogger.Instance loggerInstance = null)
+        public void CheckAll()
         {
             foreach (MethodInfo methodInfo in typeof(GameStatisticsProvider).GetMethods())
             {
                 string methodFullName = string.Format("{0}.{1}", methodInfo.DeclaringType.FullName, methodInfo.Name);
-                methodInfo.GetCustomAttribute<CustomAttribute>()?.PrintSelf(methodFullName, loggerInstance);
+                methodInfo.GetCustomAttribute<PrintSupportedAttribute>()?.PrintSelf(methodFullName);
             }
         }
 
@@ -144,7 +144,7 @@ namespace MiscToolsForMD.SDK
     }
 
     [AttributeUsage(AttributeTargets.All, Inherited = false)]
-    public class FixmeAttribute : CustomAttribute
+    public class FixmeAttribute : PrintSupportedAttribute
     {
         private readonly string msg;
 
@@ -154,15 +154,19 @@ namespace MiscToolsForMD.SDK
             msg = reason;
         }
 
-        public override void PrintSelf(string methodInfo, MelonLogger.Instance loggerInstance = null)
+        public override void PrintSelf(string methodInfo)
         {
             string fullMsg = string.Format("{0}: Fixme: {1}", methodInfo, msg);
-            if (loggerInstance == null)
+            MelonMod firstCaller = InstancesManager.GetFirstMod();
+            if (firstCaller != null)
+            {
+                firstCaller.LoggerInstance.Msg(fullMsg);
+            }
+            else
             {
                 WriteLogHeader();
                 Console.WriteLine(fullMsg);
             }
-            loggerInstance?.Msg(fullMsg);
         }
 
         private static void WriteLogHeader()
@@ -182,9 +186,9 @@ namespace MiscToolsForMD.SDK
         }
     }
 
-    public abstract class CustomAttribute : Attribute
+    public abstract class PrintSupportedAttribute : Attribute
     {
-        public abstract void PrintSelf(string methodInfo, MelonLogger.Instance loggerInstance = null);
+        public abstract void PrintSelf(string methodInfo);
     }
 
     internal class InternalDefines
