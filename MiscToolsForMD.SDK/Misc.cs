@@ -93,37 +93,15 @@ namespace MiscToolsForMD.SDK
         public static readonly string id = "MiscToolsForMD.SDK";
     }
 
-    public class AttributeChecker : ISingleOnly
+    public static class AttributeChecker
     {
-        private string id;
-        private bool isChecked = false;
-
-        public void CheckAll()
+        public static void Check(object o)
         {
-            if (!isChecked)
+            foreach (MethodInfo methodInfo in o.GetType().GetMethods())
             {
-                foreach (MethodInfo methodInfo in typeof(GameStatisticsProvider).GetMethods())
-                {
-                    string methodFullName = string.Format("{0}.{1}", methodInfo.DeclaringType.FullName, methodInfo.Name);
-                    methodInfo.GetCustomAttribute<PrintSupportedAttribute>()?.PrintSelf(methodFullName);
-                }
-                isChecked = true;
+                string methodFullName = string.Format("{0}.{1}", methodInfo.DeclaringType.FullName, methodInfo.Name);
+                methodInfo.GetCustomAttribute<PrintSupportedAttribute>()?.PrintSelf(methodFullName);
             }
-        }
-
-        public void SetID(string newID)
-        {
-            id = newID;
-        }
-
-        public string GetID()
-        {
-            return id;
-        }
-
-        public void OnRemove()
-        {
-            id = "";
         }
     }
 

@@ -8,7 +8,7 @@ namespace MiscToolsForMD.SDK
     {
         private static readonly List<ISingleOnly> instances = new List<ISingleOnly>();
         private static readonly List<MelonMod> calledModsList = new List<MelonMod>();
-        private static HarmonyLib.Harmony harmonyInstance = new HarmonyLib.Harmony(PublicDefines.id);
+        private static readonly HarmonyLib.Harmony harmonyInstance = new HarmonyLib.Harmony(PublicDefines.id);
 
         /// <summary>
         /// Get single instance globally.
@@ -16,35 +16,23 @@ namespace MiscToolsForMD.SDK
         /// <typeparam name="T">
         /// Any object implements ISingleOnly interface.
         /// </typeparam>
-        /// <param name="id">
-        /// The ID of that ISingleOnly object.
-        /// </param>
-        /// <param name="realID">
-        /// If the ID has been used, we will generate a new ID and pass it to realID.
-        /// Or we will pass ID to realID.
-        /// </param>
-        /// <param name="replace">
-        /// If replace existing instance.<br/>
-        /// NOTE: It is dangerous if you replace existing instance with another type. You should think twice before using it.
-        /// </param>
         /// <returns>
         /// The globally single instance of type <c>T</c>.
         /// </returns>
-        public static T GetInstance<T>(string id, out string realID, bool replace = false)
+        public static T GetInstance<T>()
             where T : ISingleOnly, new()
         {
-            ISingleOnly instance = instances.Find(iSingleOnly => iSingleOnly.GetID() == id);
-            realID = id;
-            if ((instance == null) || !(instance is T))
+            foreach (ISingleOnly singleOnly in instances)
             {
-                if (!replace && (instance != null))
+                if (typeof(T).IsInstanceOfType(singleOnly))
                 {
-                    int count = instances.FindLastIndex(iSingleOnly => iSingleOnly.GetID() == id) + 1;
-                    realID = string.Format("{0}#{1}", id, count);
+                    return (T)singleOnly;
                 }
-                instance = CreateInstance<T>(realID);
             }
-            return (T)instance;
+            T instance = Activator.CreateInstance<T>();
+            instances.Add(instance);
+            AttributeChecker.Check(instance);
+            return instance;
         }
 
         internal static void AddCallerMod(MelonMod mod)
@@ -64,37 +52,9 @@ namespace MiscToolsForMD.SDK
             return calledModsList[0];
         }
 
-        internal static bool RemoveInstance<T>(string id)
-            where T : ISingleOnly, new()
-        {
-            ISingleOnly instance = instances.Find(iSingleOnly => iSingleOnly.GetID() == id);
-            if ((instance != null) && (instance is T))
-            {
-                instance.OnRemove();
-                instances.Remove(instance);
-                return true;
-            }
-            return false;
-        }
-
         internal static HarmonyLib.Harmony GetHarmony()
         {
-            if (harmonyInstance == null)
-            {
-                throw new NullReferenceException(
-                    "No available Harmony Instance, " +
-                    "have you run InitSDK() method in your mod's entrance?");
-            }
             return harmonyInstance;
-        }
-
-        private static T CreateInstance<T>(string id)
-            where T : ISingleOnly, new()
-        {
-            T instance = Activator.CreateInstance<T>();
-            instance.SetID(id);
-            instances.Add(instance);
-            return instance;
         }
     }
 
@@ -110,23 +70,9 @@ namespace MiscToolsForMD.SDK
         /// </param>
         public static SDK InitSDK(MelonMod mod)
         {
-            InstancesManager.GetInstance<AttributeChecker>(PublicDefines.attrCheckerId, out _, true).CheckAll();
-            InstancesManager.GetInstance<GameStatisticsProvider>(PublicDefines.statisticProviderId, out _, true);
+            InstancesManager.GetInstance<GameStatisticsProvider>();
             InstancesManager.AddCallerMod(mod);
-            return InstancesManager.GetInstance<SDK>(PublicDefines.id, out _);
-        }
-
-        public void SetID(string id)
-        {
-        }
-
-        public string GetID()
-        {
-            return PublicDefines.id;
-        }
-
-        public void OnRemove()
-        {
+            return InstancesManager.GetInstance<SDK>();
         }
     }
 
@@ -168,13 +114,7 @@ namespace MiscToolsForMD.SDK
     }
 
     public interface ISingleOnly
-    {
-        string GetID();
-
-        void SetID(string id);
-
-        void OnRemove();
-    }
+    { }
 
     public interface ILyricSource
     {

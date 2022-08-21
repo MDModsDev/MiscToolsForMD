@@ -15,7 +15,7 @@ namespace MiscToolsForMD.MOD
     {
         private readonly Dictionary<string, string> keyDisplayNames = SDK.PublicDefines.keyDisplayNames;
         private readonly List<KeyInfo> keyInfos = new List<KeyInfo>();
-        private readonly GameStatisticsProvider statisticsProvider = InstancesManager.GetInstance<GameStatisticsProvider>(SDK.PublicDefines.statisticProviderId, out _);
+        private readonly GameStatisticsProvider statisticsProvider = InstancesManager.GetInstance<GameStatisticsProvider>();
         private string accuracyText = "", lyricContent = "";
         private List<Lyric> lyrics;
         private Rect windowRect, lyricWindowRect;
