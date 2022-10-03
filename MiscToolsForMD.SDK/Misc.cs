@@ -92,7 +92,54 @@ namespace MiscToolsForMD.SDK
         public static readonly string attrCheckerId = "attrChecker";
         public static readonly string id = "MiscToolsForMD.SDK";
     }
+    public interface ISingleOnly
+    { }
 
+    public interface ILyricSource
+    {
+        string Name { get; }
+        string Author { get; }
+        string Id { get; }
+        uint Priority { get; }
+
+        List<Lyric> GetLyrics(string title, string artist);
+    }
+    public class MusicDisplayInfo
+    {
+        /// <summary>
+        /// Title of the song.
+        /// </summary>
+        public string musicName;
+
+        /// <summary>
+        /// Author of the song
+        /// </summary>
+        public string authorName;
+
+        public override string ToString()
+        {
+            return string.Format("{0}-{1}", musicName, authorName);
+        }
+    }
+
+    /// <summary>
+    /// Lyric object used to display lyric in game
+    /// </summary>
+    public class Lyric
+    {
+        public string content;
+        public float time;
+
+        public static Lyric GetLyricByTime(List<Lyric> lst, float time)
+        {
+            Lyric lyricFound = lst.Find(lyric => lyric.time == time);
+            if (lyricFound == null)
+            {
+                lyricFound = new Lyric() { time = time, content = "" };
+            }
+            return lyricFound;
+        }
+    }
     public static class AttributeChecker
     {
         public static void Check(object o)
@@ -140,7 +187,7 @@ namespace MiscToolsForMD.SDK
         public override void PrintSelf(string methodInfo)
         {
             string fullMsg = string.Format("{0}: Fixme: {1}", methodInfo, msg);
-            MelonMod firstCaller = InstancesManager.GetFirstMod();
+            MelonMod firstCaller = MiscTools.GetFirstMod();
             if (firstCaller != null)
             {
                 firstCaller.LoggerInstance.Msg(fullMsg);

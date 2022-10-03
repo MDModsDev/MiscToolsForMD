@@ -13,9 +13,9 @@ namespace MiscToolsForMD.MOD
 {
     public class Indicator : MonoBehaviour
     {
-        private readonly Dictionary<string, string> keyDisplayNames = SDK.PublicDefines.keyDisplayNames;
+        private readonly Dictionary<string, string> keyDisplayNames = PublicDefines.keyDisplayNames;
         private readonly List<KeyInfo> keyInfos = new List<KeyInfo>();
-        private readonly GameStatisticsProvider statisticsProvider = InstancesManager.GetInstance<GameStatisticsProvider>();
+        private readonly GameStatisticsProvider statisticsProvider = MiscTools.realtimeGameStatics;
         private string accuracyText = "", lyricContent = "";
         private List<Lyric> lyrics;
         private Rect windowRect, lyricWindowRect;
@@ -188,7 +188,7 @@ namespace MiscToolsForMD.MOD
             }
             if (MiscToolsForMDMod.config.debug)
             {
-                string musicDatasJsonPath = Path.Combine(SDK.PublicDefines.basePath, "MusicDatas");
+                string musicDatasJsonPath = Path.Combine(PublicDefines.basePath, "MusicDatas");
                 string musicDatasJsonFile = Path.Combine(musicDatasJsonPath, string.Format("{0}-{1}-{2}.json", musicDisplayInfo.musicName, musicDisplayInfo.authorName, DataHelper.selectedMusicLevel));
                 statisticsProvider.ExportMusicDatasTo(musicDatasJsonFile);
                 MiscToolsForMDMod.instance.Log("Exported MusicDatas to " + musicDatasJsonFile);

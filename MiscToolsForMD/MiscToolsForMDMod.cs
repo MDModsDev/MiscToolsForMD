@@ -30,7 +30,7 @@ namespace MiscToolsForMD
 
         public override void OnApplicationLateStart()
         {
-            SDK.SDK.InitSDK(this);
+            MiscTools.InitSDK(this);
             if (File.Exists(InternalDefines.configPath))
             {
                 try
