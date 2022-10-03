@@ -1,4 +1,5 @@
-using MelonLoader;
+using System;
+using System.Collections.Generic;
 
 namespace MiscToolsForMD.SDK
 {
@@ -31,7 +32,6 @@ namespace MiscToolsForMD.SDK
             AttributeChecker.Check(instance);
             return instance;
         }
-
 
         public static HarmonyLib.Harmony GetHarmony()
         {

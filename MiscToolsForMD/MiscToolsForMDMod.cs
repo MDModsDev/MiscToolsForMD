@@ -28,9 +28,8 @@ namespace MiscToolsForMD
         internal static Config config;
         internal List<ILyricSource> lyricSources = new List<ILyricSource>();
 
-        public override void OnApplicationLateStart()
+        public override void OnLateInitializeMelon()
         {
-            MiscTools.InitSDK(this);
             if (File.Exists(InternalDefines.configPath))
             {
                 try
