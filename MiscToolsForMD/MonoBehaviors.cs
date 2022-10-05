@@ -15,7 +15,6 @@ namespace MiscToolsForMD.MOD
     {
         private readonly Dictionary<string, string> keyDisplayNames = SDK.PublicDefines.keyDisplayNames;
         private readonly List<KeyInfo> keyInfos = new List<KeyInfo>();
-        private readonly GameStatisticsProvider statisticsProvider = MiscTools.realtimeGameStatics;
         private string accuracyText = "", lyricContent = "";
         private List<Lyric> lyrics;
         private Rect windowRect, lyricWindowRect;
@@ -31,7 +30,7 @@ namespace MiscToolsForMD.MOD
 
         public void Start()
         {
-            MusicDisplayInfo musicDisplayInfo = statisticsProvider.GetMusicDisplayInfo();
+            MusicDisplayInfo musicDisplayInfo = MiscTools.realtimeGameStatics.GetMusicDisplayInfo();
             MiscToolsForMDMod.instance.Log(string.Format("Song name:{0};author:{1}", musicDisplayInfo.musicName, musicDisplayInfo.authorName));
             if (MiscToolsForMDMod.config.indicator.ap.enabled || MiscToolsForMDMod.config.indicator.key.enabled)
             {
@@ -50,147 +49,22 @@ namespace MiscToolsForMD.MOD
                     width = MiscToolsForMDMod.config.indicator.width,
                     height = MiscToolsForMDMod.config.indicator.height,
                 };
-                if (!ColorUtility.DoTryParseHtmlColor(MiscToolsForMDMod.config.indicator.ap.ap, out apColor))
-                {
-                    apColor = new Color32()
-                    {
-                        r = (byte)(255 / 256f),
-                        g = (byte)(215 / 256f),
-                        b = (byte)(0 / 256f)
-                    };
-                    MiscToolsForMDMod.instance.Log("Failed to read apColor, use default instead");
-                }
-                if (!ColorUtility.DoTryParseHtmlColor(MiscToolsForMDMod.config.indicator.ap.great, out greatColor))
-                {
-                    greatColor = new Color32()
-                    {
-                        r = (byte)(65 / 256f),
-                        g = (byte)(105 / 256f),
-                        b = (byte)(225 / 256f)
-                    };
-                    MiscToolsForMDMod.instance.Log("Failed to read greatColor, use default instead");
-                }
-                if (!ColorUtility.DoTryParseHtmlColor(MiscToolsForMDMod.config.indicator.ap.miss, out missColor))
-                {
-                    missColor = Color.white;
-                    MiscToolsForMDMod.instance.Log("Failed to read missColor, use default instead");
-                }
-                if (!ColorUtility.DoTryParseHtmlColor(MiscToolsForMDMod.config.indicator.key.display, out displayColor))
-                {
-                    displayColor = Color.black;
-                    MiscToolsForMDMod.instance.Log("Failed to read displayColor, use default instead");
-                }
-                if (!ColorUtility.DoTryParseHtmlColor(MiscToolsForMDMod.config.indicator.key.pressing, out pressingColor))
-                {
-                    pressingColor = Color.white;
-                    MiscToolsForMDMod.instance.Log("Failed to read pressingColor, use default instead");
-                }
-                accuracyStyle = new GUIStyle()
-                {
-                    alignment = TextAnchor.MiddleCenter,
-                    fontSize = MiscToolsForMDMod.config.indicator.ap.size
-                };
-                lyricStyle = new GUIStyle()
-                {
-                    alignment = TextAnchor.MiddleCenter,
-                    fontSize = MiscToolsForMDMod.config.lyric.size
-                };
-                labelStyle = new GUIStyle()
-                {
-                    alignment = TextAnchor.MiddleCenter,
-                    fontSize = MiscToolsForMDMod.config.size
-                };
+                PrepareColors();
+                PrepareStyles();
                 accuracyStyle.normal.textColor = apColor;
                 accuracyText = string.Format("{0:P}", 1);
-                List<string> workingKeys = statisticsProvider.GetControlKeys();
-                List<KeyCode> keyCodes = Enum.GetValues(typeof(KeyCode)).Cast<KeyCode>().ToList();
-                if (workingKeys.Count >= 3 && workingKeys.Count <= 9)
-                {
-                    int controlKeysNum = workingKeys.Count / 2;
-                    keyInfos.Clear();
-                    for (int i = 0; i < workingKeys.Count; i++)
-                    {
-                        KeyInfo keyInfo = new KeyInfo()
-                        {
-                            code = keyCodes.Find(keyCode => keyCode.ToString() == workingKeys[i]),
-                            count = 0,
-                            displayColor = displayColor,
-                            style = new GUIStyle()
-                            {
-                                alignment = TextAnchor.MiddleCenter,
-                                fontSize = MiscToolsForMDMod.config.indicator.key.size
-                            }
-                        };
-                        if (i < controlKeysNum)
-                        {
-                            keyInfo.type = ControlType.Air;
-                        }
-                        else if (i >= (workingKeys.Count - controlKeysNum) && i < (workingKeys.Count))
-                        {
-                            keyInfo.type = ControlType.Ground;
-                        }
-                        else
-                        {
-                            keyInfo.type = ControlType.Fever;
-                        }
-                        keyInfo.style.normal.textColor = displayColor;
-                        MiscToolsForMDMod.instance.Log("KeyInfo:" + keyInfo);
-                        keyInfos.Add(keyInfo);
-                        if (keyInfos.FindAll(eachKeyInfo => eachKeyInfo.type == ControlType.Fever).Count > 1)
-                        {
-                            MiscToolsForMDMod.instance.LoggerInstance.Warning("There seems to many Fever keys.");
-                        }
-                    }
-                }
-                else
-                {
-                    MiscToolsForMDMod.instance.LoggerInstance.Error("Unexcepted Keys List.");
-                }
+                PrepareKeys();
             }
 
             if (MiscToolsForMDMod.config.lyric.enabled)
             {
-                if (MiscToolsForMDMod.config.lyric.x < 0)
-                {
-                    MiscToolsForMDMod.config.lyric.x = (Screen.width - MiscToolsForMDMod.config.lyric.width) / 2;
-                }
-
-                if (MiscToolsForMDMod.config.lyric.y < 0)
-                {
-                    MiscToolsForMDMod.config.lyric.y = Screen.height - MiscToolsForMDMod.config.lyric.height - 100;
-                }
-                lyricWindowRect = new Rect()
-                {
-                    x = MiscToolsForMDMod.config.lyric.x,
-                    y = MiscToolsForMDMod.config.lyric.y,
-                    height = MiscToolsForMDMod.config.lyric.height,
-                    width = MiscToolsForMDMod.config.lyric.width,
-                };
-                bool successGetLyric = false;
-                foreach (ILyricSource source in MiscToolsForMDMod.instance.lyricSources)
-                {
-                    try
-                    {
-                        lyrics = source.GetLyrics(musicDisplayInfo.musicName, musicDisplayInfo.authorName);
-                        successGetLyric = true;
-                        break;
-                    }
-                    catch (Exception ex)
-                    {
-                        MiscToolsForMDMod.instance.LoggerInstance.Error(ex.ToString(), "Failed to get lyric through source " + source.Name);
-                    }
-                }
-                if (!successGetLyric || lyrics.Count == 0)
-                {
-                    MiscToolsForMDMod.config.lyric.enabled = false;
-                    MiscToolsForMDMod.instance.LoggerInstance.Error("No available lyric. We will disable lyric displaying.");
-                }
+                PrepareLyrics(musicDisplayInfo);
             }
             if (MiscToolsForMDMod.config.debug)
             {
                 string musicDatasJsonPath = Path.Combine(SDK.PublicDefines.basePath, "MusicDatas");
                 string musicDatasJsonFile = Path.Combine(musicDatasJsonPath, string.Format("{0}-{1}-{2}.json", musicDisplayInfo.musicName, musicDisplayInfo.authorName, DataHelper.selectedMusicLevel));
-                statisticsProvider.ExportMusicDatasTo(musicDatasJsonFile);
+                MiscTools.realtimeGameStatics.ExportMusicDatasTo(musicDatasJsonFile);
                 MiscToolsForMDMod.instance.Log("Exported MusicDatas to " + musicDatasJsonFile);
             }
         }
@@ -218,17 +92,18 @@ namespace MiscToolsForMD.MOD
                 float time = Singleton<StageBattleComponent>.instance.timeFromMusicStart;
                 lyricContent = Lyric.GetLyricByTime(lyrics, time).content;
             }
+            UpdateAccuracy();
         }
 
         public void OnGUI()
         {
             if (MiscToolsForMDMod.config.indicator.ap.enabled || MiscToolsForMDMod.config.indicator.key.enabled)
             {
-                windowRect = GUILayout.Window(0, windowRect, (GUI.WindowFunction)IndicatorWindow, "MiscToolsUI", null);
+                windowRect = GUILayout.Window(InternalDefines.windowRectId, windowRect, (GUI.WindowFunction)IndicatorWindow, "MiscToolsUI", null);
             }
             if (MiscToolsForMDMod.config.lyric.enabled)
             {
-                lyricWindowRect = GUILayout.Window(1, lyricWindowRect, (GUI.WindowFunction)LyricWindow, "Lyric", null);
+                lyricWindowRect = GUILayout.Window(InternalDefines.lyricWindowId, lyricWindowRect, (GUI.WindowFunction)LyricWindow, "Lyric", null);
             }
         }
 
@@ -237,15 +112,160 @@ namespace MiscToolsForMD.MOD
             MiscToolsForMDMod.indicator = null;
         }
 
-        internal void UpdateAccuracy()
+        private void PrepareStyles()
         {
-            float unit = 0.0001f;
+            accuracyStyle = new GUIStyle()
+            {
+                alignment = TextAnchor.MiddleCenter,
+                fontSize = MiscToolsForMDMod.config.indicator.ap.size
+            };
+            lyricStyle = new GUIStyle()
+            {
+                alignment = TextAnchor.MiddleCenter,
+                fontSize = MiscToolsForMDMod.config.lyric.size
+            };
+            labelStyle = new GUIStyle()
+            {
+                alignment = TextAnchor.MiddleCenter,
+                fontSize = MiscToolsForMDMod.config.size
+            };
+        }
+
+        private void PrepareKeys()
+        {
+            List<string> workingKeys = MiscTools.realtimeGameStatics.GetControlKeys();
+            List<KeyCode> keyCodes = Enum.GetValues(typeof(KeyCode)).Cast<KeyCode>().ToList();
+            if (workingKeys.Count >= 3 && workingKeys.Count <= 9)
+            {
+                int controlKeysNum = workingKeys.Count / 2;
+                keyInfos.Clear();
+                for (int i = 0; i < workingKeys.Count; i++)
+                {
+                    KeyInfo keyInfo = new KeyInfo()
+                    {
+                        code = keyCodes.Find(keyCode => keyCode.ToString() == workingKeys[i]),
+                        count = 0,
+                        displayColor = displayColor,
+                        style = new GUIStyle()
+                        {
+                            alignment = TextAnchor.MiddleCenter,
+                            fontSize = MiscToolsForMDMod.config.indicator.key.size
+                        }
+                    };
+                    if (i < controlKeysNum)
+                    {
+                        keyInfo.type = ControlType.Air;
+                    }
+                    else if (i >= (workingKeys.Count - controlKeysNum) && i < (workingKeys.Count))
+                    {
+                        keyInfo.type = ControlType.Ground;
+                    }
+                    else
+                    {
+                        keyInfo.type = ControlType.Fever;
+                    }
+                    keyInfo.style.normal.textColor = displayColor;
+                    MiscToolsForMDMod.instance.Log("KeyInfo:" + keyInfo);
+                    keyInfos.Add(keyInfo);
+                    if (keyInfos.FindAll(eachKeyInfo => eachKeyInfo.type == ControlType.Fever).Count > 1)
+                    {
+                        MiscToolsForMDMod.instance.LoggerInstance.Warning("There seems to many Fever keys.");
+                    }
+                }
+            }
+            else
+            {
+                MiscToolsForMDMod.instance.LoggerInstance.Error("Unexcepted Keys List.");
+            }
+        }
+
+        private void PrepareLyrics(MusicDisplayInfo musicDisplayInfo)
+        {
+            if (MiscToolsForMDMod.config.lyric.x < 0)
+            {
+                MiscToolsForMDMod.config.lyric.x = (Screen.width - MiscToolsForMDMod.config.lyric.width) / 2;
+            }
+
+            if (MiscToolsForMDMod.config.lyric.y < 0)
+            {
+                MiscToolsForMDMod.config.lyric.y = Screen.height - MiscToolsForMDMod.config.lyric.height - 100;
+            }
+            lyricWindowRect = new Rect()
+            {
+                x = MiscToolsForMDMod.config.lyric.x,
+                y = MiscToolsForMDMod.config.lyric.y,
+                height = MiscToolsForMDMod.config.lyric.height,
+                width = MiscToolsForMDMod.config.lyric.width,
+            };
+            bool successGetLyric = false;
+            foreach (ILyricSource source in MiscToolsForMDMod.instance.lyricSources)
+            {
+                try
+                {
+                    lyrics = source.GetLyrics(musicDisplayInfo.musicName, musicDisplayInfo.authorName);
+                    successGetLyric = true;
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    MiscToolsForMDMod.instance.LoggerInstance.Error(ex.ToString(), "Failed to get lyric through source " + source.Name);
+                }
+            }
+            if (!successGetLyric || lyrics.Count == 0)
+            {
+                MiscToolsForMDMod.config.lyric.enabled = false;
+                MiscToolsForMDMod.instance.LoggerInstance.Error("No available lyric. We will disable lyric displaying.");
+            }
+        }
+
+        private void PrepareColors()
+        {
+            if (!ColorUtility.DoTryParseHtmlColor(MiscToolsForMDMod.config.indicator.ap.ap, out apColor))
+            {
+                apColor = new Color32()
+                {
+                    r = (byte)(255 / 256f),
+                    g = (byte)(215 / 256f),
+                    b = (byte)(0 / 256f)
+                };
+                MiscToolsForMDMod.instance.Log("Failed to read apColor, use default instead");
+            }
+            if (!ColorUtility.DoTryParseHtmlColor(MiscToolsForMDMod.config.indicator.ap.great, out greatColor))
+            {
+                greatColor = new Color32()
+                {
+                    r = (byte)(65 / 256f),
+                    g = (byte)(105 / 256f),
+                    b = (byte)(225 / 256f)
+                };
+                MiscToolsForMDMod.instance.Log("Failed to read greatColor, use default instead");
+            }
+            if (!ColorUtility.DoTryParseHtmlColor(MiscToolsForMDMod.config.indicator.ap.miss, out missColor))
+            {
+                missColor = Color.white;
+                MiscToolsForMDMod.instance.Log("Failed to read missColor, use default instead");
+            }
+            if (!ColorUtility.DoTryParseHtmlColor(MiscToolsForMDMod.config.indicator.key.display, out displayColor))
+            {
+                displayColor = Color.black;
+                MiscToolsForMDMod.instance.Log("Failed to read displayColor, use default instead");
+            }
+            if (!ColorUtility.DoTryParseHtmlColor(MiscToolsForMDMod.config.indicator.key.pressing, out pressingColor))
+            {
+                pressingColor = Color.white;
+                MiscToolsForMDMod.instance.Log("Failed to read pressingColor, use default instead");
+            }
+        }
+
+        private void UpdateAccuracy()
+        {
+            const float unit = 0.0001f;
             float trueAccBySelf = 1.0f;
             float trueAccInGame = 1.0f;
-            int actualWeightInGame = statisticsProvider.GetCurrentActualWeightInGame();
-            int targetWeightInGame = statisticsProvider.GetCurrentTargetWeightInGame();
-            int actualWeight = statisticsProvider.GetCurrentActualWeightBySelf();
-            int targetWeight = statisticsProvider.GetCurrentTargetWeightBySelf();
+            int actualWeightInGame = MiscTools.realtimeGameStatics.GetCurrentActualWeightInGame();
+            int targetWeightInGame = MiscTools.realtimeGameStatics.GetCurrentTargetWeightInGame();
+            int actualWeight = MiscTools.realtimeGameStatics.GetCurrentActualWeightBySelf();
+            int targetWeight = MiscTools.realtimeGameStatics.GetCurrentTargetWeightBySelf();
             if ((targetWeight > 0) && (actualWeight <= targetWeight))
             {
                 trueAccBySelf = actualWeight * 1.0f / targetWeight;
@@ -267,7 +287,7 @@ namespace MiscToolsForMD.MOD
             accuracyText = string.Format("{0:P}", acc);
             if (acc < 1f && acc >= 0f)
             {
-                if (statisticsProvider.IsStrictlyMissed())
+                if (MiscTools.realtimeGameStatics.IsStrictlyMissed())
                 {
                     accuracyStyle.normal.textColor = missColor;
                 }

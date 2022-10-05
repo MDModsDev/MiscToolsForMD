@@ -1,15 +1,9 @@
 ﻿using Assets.Scripts.GameCore.GamePlay;
-using Assets.Scripts.GameCore.HostComponent;
-using Assets.Scripts.GameCore.Managers;
-using Assets.Scripts.PeroTools.Commons;
-using FormulaBase;
-using GameLogic;
 using HarmonyLib;
 using MelonLoader;
 using MiscToolsForMD.MOD;
 using MiscToolsForMD.SDK;
 using Newtonsoft.Json;
-using PeroPeroGames.GlobalDefines;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -77,18 +71,6 @@ namespace MiscToolsForMD
             {
                 LoggerInstance.Msg("Nothing was applied.");
             }
-            if (config.indicator.ap.enabled)
-            {
-                MethodInfo setPlayResult = typeof(BattleEnemyManager).GetMethod(nameof(BattleEnemyManager.SetPlayResult));
-                MethodInfo setPlayResultPatch = typeof(MiscToolsForMDMod).GetMethod(nameof(SetPlayResult), BindingFlags.Static | BindingFlags.NonPublic);
-                HarmonyInstance.Patch(setPlayResult, null, new HarmonyMethod(setPlayResultPatch));
-                MethodInfo onNoteResult = typeof(StatisticsManager).GetMethod(nameof(StatisticsManager.OnNoteResult));
-                MethodInfo onNoteResultPatch = typeof(MiscToolsForMDMod).GetMethod(nameof(OnNoteResult), BindingFlags.Static | BindingFlags.NonPublic);
-                HarmonyInstance.Patch(onNoteResult, null, new HarmonyMethod(onNoteResultPatch));
-                MethodInfo addComboMiss = typeof(TaskStageTarget).GetMethod(nameof(TaskStageTarget.AddComboMiss));
-                MethodInfo addComboMissPatch = typeof(MiscToolsForMDMod).GetMethod(nameof(AddComboMiss), BindingFlags.Static | BindingFlags.NonPublic);
-                HarmonyInstance.Patch(addComboMiss, null, new HarmonyMethod(addComboMissPatch));
-            }
             if (config.lyric.enabled)
             {
                 lyricSources.Add(new LocalSource());
@@ -113,118 +95,11 @@ namespace MiscToolsForMD
             }
         }
 
-        private static void SetPlayResult(int idx, byte result, bool isMulStart, bool isMulEnd, bool isLeft)
-        {
-            // See Assets.Scripts.GameCore.HostComponent.TaskStageTarget.GetTrueAccuracyNew
-            // and Assets.Scripts.GameCore.HostComponent.BattleEnemyManager.SetPlayResult
-            // AddComboMiss -> SetPlayResult -> OnNoteResult (Not sure)
-            TaskResult resultEasier = (TaskResult)result;
-            instance.Log(string.Format("idx:{0};result:{1};isMulStart:{2};isMulEnd:{3};isLeft:{4}", idx, resultEasier, isMulStart, isMulEnd, isLeft));
-            if (!isMulStart)
-            {
-                if (resultEasier <= TaskResult.None)
-                {
-                    return;
-                }
-                MusicData musicData = Singleton<StageBattleComponent>.instance.GetMusicDataByIdx(idx);
-                TaskResult playResult = (TaskResult)Singleton<BattleEnemyManager>.instance.GetPlayResult(idx);
-                if (musicData.isLongPressing)
-                {
-                    return;
-                }
-                instance.Log("Note type:" + (NoteType)musicData.noteData.type);
-                if (!musicData.noteData.addCombo)
-                {
-                    instance.Log("Note which doesn't add combo captured.");
-                }
-                else if (musicData.isLongPressEnd || musicData.isLongPressStart)
-                {
-                    switch (resultEasier)
-                    {
-                        case TaskResult.Prefect:
-                            break;
-
-                        case TaskResult.Great:
-                            break;
-
-                        default:
-                            instance.Log("A LongPressStart/End note's result is TaskResult.None/TaskResult.Miss");
-                            break;
-                    }
-                    instance.Log("LongPressStart/End captured.");
-                }
-                else if (playResult == TaskResult.None || isMulEnd || musicData.doubleIdx > 0)
-                {
-                    if (musicData.isDouble)
-                    {
-                        TaskResult playResult2 = (TaskResult)Singleton<BattleEnemyManager>.instance.GetPlayResult(musicData.doubleIdx);
-                        if (playResult2 == TaskResult.None)
-                        {
-                            instance.Log("Current is first note of a double-press group.");
-                        }
-                        else
-                        {
-                            instance.Log("Current is second note of a double-press group.");
-                        }
-                        instance.Log("Double-Press captured.");
-                    }
-                    else
-                    {
-                        switch (resultEasier)
-                        {
-                            case TaskResult.Prefect:
-                                break;
-
-                            case TaskResult.Great:
-                                break;
-
-                            case TaskResult.Miss:
-                                if (musicData.noteData.type == (uint)NoteType.Hide)
-                                {
-                                    instance.Log("A ghost note is missed");
-                                }
-                                else
-                                {
-                                    instance.Log("A normal note is missed");
-                                }
-                                break;
-
-                            default:
-                                instance.Log("A normal note's result is TaskResult.None");
-                                break;
-                        }
-                        instance.Log("Normal note captured.");
-                    }
-                }
-                indicator.UpdateAccuracy();
-            }
-        }
-
-        private static void OnNoteResult(int result)
-        {
-            instance.Log("result:" + result);
-            if (result == (int)TaskResult.None)
-            {
-                indicator.UpdateAccuracy();
-                instance.Log("Missing Heart/Music");
-            }
-        }
-
-        private static void AddComboMiss(int value)
-        {
-            instance.Log("value:" + value);
-            if (value == 1)
-            {
-                indicator.UpdateAccuracy();
-                instance.Log("Missing normal note.");
-            }
-        }
-
         private static void Init()
         {
             ClassInjector.RegisterTypeInIl2Cpp<Indicator>();
             GameObject ui = GameObject.Find("MiscToolsUI");
-            if (ui == null)
+            if (ui is null)
             {
                 ui = new GameObject("MiscToolsUI");
                 instance.Log("Creating new GameObject");

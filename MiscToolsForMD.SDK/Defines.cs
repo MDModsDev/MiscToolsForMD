@@ -85,9 +85,9 @@ namespace MiscToolsForMD.SDK
         public static readonly string gamePath = Directory.GetCurrentDirectory();
         public static readonly string dataPath = Path.Combine(gamePath, "UserData");
         public static readonly string basePath = Path.Combine(dataPath, "MiscToolsForMD");
-        public static readonly string statisticProviderId = "currentStatistics";
-        public static readonly string attrCheckerId = "attrChecker";
-        public static readonly string id = "MiscToolsForMD.SDK";
+        public const string statisticProviderId = "currentStatistics";
+        public const string attrCheckerId = "attrChecker";
+        public const string id = "MiscToolsForMD.SDK";
     }
 
     public interface ISingleOnly
@@ -96,5 +96,6 @@ namespace MiscToolsForMD.SDK
     internal class InternalDefines
     {
         public static readonly string configPath = Path.Combine(PublicDefines.basePath, "MiscToolsForMD.SDK.json");
+        public static readonly string logPath = Path.Combine(PublicDefines.basePath, "MiscToolsForMD.SDK.log");
     }
 }

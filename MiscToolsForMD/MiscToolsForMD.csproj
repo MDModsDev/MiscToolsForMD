@@ -21,8 +21,10 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <NoWarn>TODO</NoWarn>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <NoWarn>
+    </NoWarn>
+    <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -100,7 +102,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Misc.cs" />
+    <Compile Include="Config.cs" />
+    <Compile Include="KeyInfo.cs" />
+    <Compile Include="LocalSource.cs" />
+    <Compile Include="Defines.cs" />
     <Compile Include="Lang.cs" />
     <Compile Include="MiscToolsForMDMod.cs" />
     <Compile Include="MonoBehaviors.cs" />

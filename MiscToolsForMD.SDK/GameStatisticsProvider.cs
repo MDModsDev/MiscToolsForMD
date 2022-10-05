@@ -1,21 +1,21 @@
 ﻿using Assets.Scripts.Database;
 using Assets.Scripts.GameCore.HostComponent;
 using Assets.Scripts.GameCore.Managers;
-using Assets.Scripts.PeroTools.Nice.Datas;
-using Assets.Scripts.PeroTools.Nice.Interface;
 using Assets.Scripts.PeroTools.Commons;
 using Assets.Scripts.PeroTools.Managers;
+using Assets.Scripts.PeroTools.Nice.Datas;
+using Assets.Scripts.PeroTools.Nice.Interface;
 using FormulaBase;
 using GameLogic;
 using HarmonyLib;
 using Newtonsoft.Json;
 using PeroPeroGames.GlobalDefines;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
-using System;
 
 namespace MiscToolsForMD.SDK
 {
@@ -26,7 +26,6 @@ namespace MiscToolsForMD.SDK
         private static int actualWeightBySelf = 0;
         private static int skippedNum = 0;
         private static int recordedMaxId = 0;
-        private string id;
 
         /// <summary>
         /// Get controller keys in game config. See
@@ -68,8 +67,7 @@ namespace MiscToolsForMD.SDK
         /// <seealso cref="StatisticsManager.OnBattleStart">
         /// </summary>
         /// <returns>
-        /// A MusicDisplayInfo object
-        /// <seealso cref="MusicDisplayInfo"/>
+        /// A <seealso cref="MusicDisplayInfo"/> object
         /// </returns>
         public MusicDisplayInfo GetMusicDisplayInfo()
         {
@@ -223,39 +221,23 @@ namespace MiscToolsForMD.SDK
         public GameStatisticsProvider()
         {
             HarmonyLib.Harmony harmony = InstancesManager.GetHarmony();
-            MethodInfo init = typeof(StatisticsManager).GetMethod(nameof(StatisticsManager.OnBattleStart));
+
+            MethodInfo init = typeof(StageBattleComponent).GetMethod(nameof(StageBattleComponent.InitGame));
             MethodInfo initPatch = typeof(GameStatisticsProvider).GetMethod(nameof(GameStatisticsProvider.RefreshMusicDatas), BindingFlags.Static | BindingFlags.NonPublic);
             harmony.Patch(init, null, new HarmonyMethod(initPatch));
+
             MethodInfo onNoteResult = typeof(StatisticsManager).GetMethod(nameof(StatisticsManager.OnNoteResult));
             MethodInfo onNoteResultPatch = typeof(GameStatisticsProvider).GetMethod(nameof(GameStatisticsProvider.AddSkippedNumWhenSkippedMusicOrHeart), BindingFlags.Static | BindingFlags.NonPublic);
             harmony.Patch(onNoteResult, null, new HarmonyMethod(onNoteResultPatch));
+
             MethodInfo setPlayResult = typeof(BattleEnemyManager).GetMethod(nameof(BattleEnemyManager.SetPlayResult));
             MethodInfo setPlayResultPatch = typeof(GameStatisticsProvider).GetMethod(nameof(GameStatisticsProvider.SetWeightsByResult), BindingFlags.Static | BindingFlags.NonPublic);
             harmony.Patch(setPlayResult, null, new HarmonyMethod(setPlayResultPatch));
+
             // TODO:Fix patch target
             MethodInfo addComboMiss = typeof(StageBattleComponent).GetMethod(nameof(StageBattleComponent.SetCombo));
             MethodInfo addComboMissPatch = typeof(GameStatisticsProvider).GetMethod(nameof(GameStatisticsProvider.AddSkippedNumWhenSkippedNormalNote), BindingFlags.Static | BindingFlags.NonPublic);
             harmony.Patch(addComboMiss, null, new HarmonyMethod(addComboMissPatch));
-        }
-
-        public string GetID()
-        {
-            return id;
-        }
-
-        public void SetID(string id)
-        {
-            this.id = id;
-        }
-
-        public void OnRemove()
-        {
-            recordedMaxId = 0;
-            skippedNum = 0;
-            actualWeightBySelf = 0;
-            targetWeightBySelf = 0;
-            musicDatas.Clear();
-            id = null;
         }
 
         private static void AddSkippedNum(int value = 1)

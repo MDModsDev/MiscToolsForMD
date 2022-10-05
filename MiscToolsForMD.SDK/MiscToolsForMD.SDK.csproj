@@ -21,8 +21,10 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <NoWarn>TODO</NoWarn>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <NoWarn>
+    </NoWarn>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -97,11 +99,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Attributes.cs" />
+    <Compile Include="Config.cs" />
     <Compile Include="GameStatisticsProvider.cs" />
     <Compile Include="InstancesManager.cs" />
     <Compile Include="KeyConfig.cs" />
+    <Compile Include="Logger.cs" />
     <Compile Include="Lyric.cs" />
-    <Compile Include="Misc.cs" />
+    <Compile Include="Defines.cs" />
     <Compile Include="MiscTools.cs" />
     <Compile Include="MusicDisplayInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Reflection;
 
 namespace MiscToolsForMD.SDK
@@ -31,6 +32,7 @@ namespace MiscToolsForMD.SDK
             string fullMsg = string.Format("{0}: Fixme: {1}", methodInfo, msg);
             WriteLogHeader();
             Console.WriteLine(fullMsg);
+            File.AppendAllText(InternalDefines.logPath, fullMsg + "\n");
         }
 
         private static void WriteLogHeader()

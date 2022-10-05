@@ -27,6 +27,14 @@ Code inside it contains a data provider which allows you get realtime play info.
 Just add it to your project as a reference, all APIs are under namespace `MiscToolsForMD.SDK`.  
 **[WARN]** The SDK is under heavy development and may not work as expected. Also it needs a qualified document, but I am working on fixing accuracy calculating now so you may have to explore it yourself.  
 
+## Known issues
+
+- Accuracy calculation in some cases is not same with game's result, we are working on it now.
+
 ## Contributing
 
-Please creating feature at branch dev, we use branch main as stable version.
+1. Please creating feature at branch `dev`, we use branch `main` as stable version.
+2. Please use Visual Studio or other IDE supports Visual Studio's `.editorconfig`. Because we defined our code style in `.editorconfig` file, using Visual Studio can make your code like us. You can use Visual Studio Community for free. If you still want to choose other IDE which does not support the `.editorconfig` file, please keep our code style yourself:
+    - Most of the names are using Pascal Style, interface must starts with letter `I` like `IMyInterface`, `MyAwesomeClass` and `MyFunction`.
+    - Property's name should use Camel Style like `propertyAlpha` and `betaProperty`.
+3. Please make sure most warnings in Visual Studio are solved. Solving warnings may help reducing hidden bugs.
