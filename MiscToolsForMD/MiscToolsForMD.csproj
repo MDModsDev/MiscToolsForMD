@@ -107,6 +107,7 @@
     <Compile Include="LocalSource.cs" />
     <Compile Include="Defines.cs" />
     <Compile Include="Lang.cs" />
+    <Compile Include="Lyric.cs" />
     <Compile Include="MiscToolsForMDMod.cs" />
     <Compile Include="MonoBehaviors.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

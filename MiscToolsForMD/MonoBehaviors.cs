@@ -210,7 +210,7 @@ namespace MiscToolsForMD.MOD
                 }
                 catch (Exception ex)
                 {
-                    MiscToolsForMDMod.instance.LoggerInstance.Error(ex.ToString(), "Failed to get lyric through source " + source.Name);
+                    MiscToolsForMDMod.instance.LoggerInstance.Error(ex.ToString(), "Failed to get lyric through source " + source.name);
                 }
             }
             if (!successGetLyric || lyrics.Count == 0)

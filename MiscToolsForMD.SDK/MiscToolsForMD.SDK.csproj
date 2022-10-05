@@ -104,7 +104,6 @@
     <Compile Include="InstancesManager.cs" />
     <Compile Include="KeyConfig.cs" />
     <Compile Include="Logger.cs" />
-    <Compile Include="Lyric.cs" />
     <Compile Include="Defines.cs" />
     <Compile Include="MiscTools.cs" />
     <Compile Include="MusicDisplayInfo.cs" />

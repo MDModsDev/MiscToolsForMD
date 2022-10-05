@@ -1,5 +1,4 @@
-﻿using MiscToolsForMD.SDK;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,10 +8,10 @@ namespace MiscToolsForMD
 {
     internal class LocalSource : ILyricSource
     {
-        public string Name => "local";
-        public string Author => "zhanghua000";
-        public string Id => Author.ToLower() + "." + Name.ToLower();
-        public uint Priority => 0;
+        public string name => "local";
+        public string author => "zhanghua000";
+        public string id => author.ToLower() + "." + name.ToLower();
+        public uint priority => 0;
 
         public List<Lyric> GetLyrics(string title, string artist)
         {

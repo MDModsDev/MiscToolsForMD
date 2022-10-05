@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace MiscToolsForMD.SDK
+namespace MiscToolsForMD
 {
     /// <summary>
     /// Lyric object used to display lyric in game
@@ -23,10 +23,10 @@ namespace MiscToolsForMD.SDK
 
     public interface ILyricSource
     {
-        string Name { get; }
-        string Author { get; }
-        string Id { get; }
-        uint Priority { get; }
+        string name { get; }
+        string author { get; }
+        string id { get; }
+        uint priority { get; }
 
         List<Lyric> GetLyrics(string title, string artist);
     }

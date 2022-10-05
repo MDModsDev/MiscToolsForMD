@@ -2,7 +2,6 @@
 using HarmonyLib;
 using MelonLoader;
 using MiscToolsForMD.MOD;
-using MiscToolsForMD.SDK;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -75,7 +74,7 @@ namespace MiscToolsForMD
             {
                 lyricSources.Add(new LocalSource());
                 // TODO: Load other lyric source
-                lyricSources = lyricSources.OrderBy(lyricSource => lyricSource.Priority).ToList();
+                lyricSources = lyricSources.OrderBy(lyricSource => lyricSource.priority).ToList();
             }
             instance = this;
             LoggerInstance.Msg("MiscToolsForMD Loads Completed.");
