@@ -30,8 +30,6 @@ namespace MiscToolsForMD.MOD
 
         public void Start()
         {
-            MusicDisplayInfo musicDisplayInfo = MiscTools.realtimeGameStatics.GetMusicDisplayInfo();
-            MiscToolsForMDMod.instance.Log(string.Format("Song name:{0};author:{1}", musicDisplayInfo.musicName, musicDisplayInfo.authorName));
             if (MiscToolsForMDMod.config.indicator.ap.enabled || MiscToolsForMDMod.config.indicator.key.enabled)
             {
                 if (MiscToolsForMDMod.config.indicator.x < 0)
@@ -58,10 +56,12 @@ namespace MiscToolsForMD.MOD
 
             if (MiscToolsForMDMod.config.lyric.enabled)
             {
-                PrepareLyrics(musicDisplayInfo);
+                PrepareLyrics();
             }
             if (MiscToolsForMDMod.config.debug)
             {
+                MusicDisplayInfo musicDisplayInfo = MiscTools.realtimeGameStatics.GetMusicDisplayInfo();
+                MiscToolsForMDMod.instance.Log(string.Format("Song name:{0};author:{1}", musicDisplayInfo.musicName, musicDisplayInfo.authorName));
                 string musicDatasJsonPath = Path.Combine(SDK.PublicDefines.basePath, "MusicDatas");
                 string musicDatasJsonFile = Path.Combine(musicDatasJsonPath, string.Format("{0}-{1}-{2}.json", musicDisplayInfo.musicName, musicDisplayInfo.authorName, DataHelper.selectedMusicLevel));
                 MiscTools.realtimeGameStatics.ExportMusicDatasTo(musicDatasJsonFile);
@@ -179,8 +179,10 @@ namespace MiscToolsForMD.MOD
             }
         }
 
-        private void PrepareLyrics(MusicDisplayInfo musicDisplayInfo)
+        private void PrepareLyrics()
         {
+            MusicDisplayInfo musicDisplayInfo = MiscTools.realtimeGameStatics.GetMusicDisplayInfo();
+            MiscToolsForMDMod.instance.Log(string.Format("Song name:{0};author:{1}", musicDisplayInfo.musicName, musicDisplayInfo.authorName));
             if (MiscToolsForMDMod.config.lyric.x < 0)
             {
                 MiscToolsForMDMod.config.lyric.x = (Screen.width - MiscToolsForMDMod.config.lyric.width) / 2;
