@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace MiscToolsForMD
+namespace MiscToolsForMD.Lyric
 {
     /// <summary>
     /// Lyric object used to display lyric in game

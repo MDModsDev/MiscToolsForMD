@@ -2,7 +2,7 @@
 using FormulaBase;
 using UnityEngine;
 
-namespace MiscToolsForMD
+namespace MiscToolsForMD.MOD
 {
     internal class KeyInfo
     {

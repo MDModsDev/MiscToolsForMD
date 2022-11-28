@@ -1,12 +1,11 @@
 ﻿using Assets.Scripts.GameCore.GamePlay;
 using HarmonyLib;
 using MelonLoader;
+using MiscToolsForMD.CompatibleLayer;
+using MiscToolsForMD.Lyric;
 using MiscToolsForMD.MOD;
-using Newtonsoft.Json;
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using UnhollowerRuntimeLib;
@@ -18,49 +17,42 @@ namespace MiscToolsForMD
     {
         public static MiscToolsForMDMod instance;
         public static Indicator indicator;
-        internal static Config config;
         internal List<ILyricSource> lyricSources = new List<ILyricSource>();
+
+        public override void OnInitializeMelon()
+        {
+            MelonPreferences_Category mainCategory = MelonPreferences.CreateCategory(InternalDefines.PreferenceNames.MainCategory.name, InternalDefines.PreferenceNames.MainCategory.name);
+            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.MainCategory.debug, false, description: "Debug mode of the mod");
+            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.MainCategory.fontSize, 24, description: "Font size");
+            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.LyricCategory.enabled, false, description: "Enable lyric display");
+            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.LyricCategory.fontSize, 36, description: "Font size of lyric panel");
+            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.LyricCategory.coordinate, new Vector2(-1, -1), description: "The coordinate of lyric panel");
+            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.LyricCategory.size, new Vector2(500, 100), description: "The size of lyric panel");
+            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.IndicatorCategory.apEnabled, true, description: "If enable realtime AP indicator");
+            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.IndicatorCategory.apManual, false, description: "If using realtime accuracy value calculated by mod");
+            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.IndicatorCategory.apSize, 36, description: "Font size of accuracy text");
+            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.IndicatorCategory.apColor, InternalDefines.defaultApColor, description: "Text color when player is AP");
+            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.IndicatorCategory.greatColor, InternalDefines.defaultGreatColor, description: "Text color when player is Full Combo");
+            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.IndicatorCategory.missColor, InternalDefines.defaultMissColor, description: "Text color when player is Missed");
+            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.IndicatorCategory.keyEnabled, true, description: "If enable key indicator");
+            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.IndicatorCategory.keySize, 36, description: "Font size of key text");
+            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.IndicatorCategory.keyDisplay, InternalDefines.defaultKeyDisplayColor, description: "Font color of all key text");
+            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.IndicatorCategory.keyPressed, InternalDefines.defaultKeyPressedColor, description: "Font color of pressed key text");
+            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.IndicatorCategory.coordinate, new Vector2(-1, -1), description: "The coordinate of indicator panel");
+            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.IndicatorCategory.size, new Vector2(500, 100), description: "The size of indicator panel");
+            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.HardCoreCategory.enabled, false, description: "If enable HardCore mode");
+            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.SoftCoreCategory.enabled, false, description: "If enable SoftCore mode");
+        }
 
         public override void OnLateInitializeMelon()
         {
-            if (File.Exists(InternalDefines.configPath))
-            {
-                try
-                {
-                    config = JsonConvert.DeserializeObject<Config>(File.ReadAllText(InternalDefines.configPath)); ;
-                }
-                catch (Exception ex)
-                {
-                    LoggerInstance.Error("Failed to load config:" + ex.Message + ", we will create default one instead.");
-                    config = new Config();
-                    SaveConfig();
-                }
-            }
-            else if (File.Exists(Path.Combine("UserData", "MiscToolsForMD.json")))
-            {
-                try
-                {
-                    config = JsonConvert.DeserializeObject<Config>(File.ReadAllText(Path.Combine("UserData", "MiscToolsForMD.json")));
-                    SaveConfig();
-                    File.Delete(Path.Combine("UserData", "MiscToolsForMD.json"));
-                    LoggerInstance.Msg("Migrating config successful!");
-                }
-                catch (Exception ex)
-                {
-                    LoggerInstance.Error("Failed to migrate config:" + ex.Message + ", we will create default one instead.");
-                    config = new Config();
-                    SaveConfig();
-                }
-            }
-            else
-            {
-                LoggerInstance.Msg("Creating default config...");
-                config = new Config();
-                SaveConfig();
-            }
-            config.debug = config.debug || MelonDebug.IsEnabled();
-            LoggerInstance.Msg("Debug mode:" + config.debug);
-            if (config.indicator.ap.enabled || config.indicator.key.enabled || config.lyric.enabled)
+            CompatibleUtils.UpdatePreferences();
+            MelonPreferences.SetEntryValue(InternalDefines.PreferenceNames.MainCategory.name, InternalDefines.PreferenceNames.MainCategory.debug,
+                GetPreferenceValue<bool>(InternalDefines.PreferenceNames.MainCategory.debug) || MelonDebug.IsEnabled());
+            LoggerInstance.Msg("Debug mode:" + GetPreferenceValue<bool>(InternalDefines.PreferenceNames.MainCategory.debug));
+            if (GetPreferenceValue<bool>(InternalDefines.PreferenceNames.IndicatorCategory.apEnabled) ||
+                GetPreferenceValue<bool>(InternalDefines.PreferenceNames.IndicatorCategory.keyEnabled) ||
+                GetPreferenceValue<bool>(InternalDefines.PreferenceNames.LyricCategory.enabled))
             {
                 MethodInfo start = typeof(GameOptimization).GetMethod(nameof(GameOptimization.Init));
                 MethodInfo startPatch = typeof(MiscToolsForMDMod).GetMethod(nameof(Init), BindingFlags.Static | BindingFlags.NonPublic);
@@ -70,7 +62,7 @@ namespace MiscToolsForMD
             {
                 LoggerInstance.Msg("Nothing was applied.");
             }
-            if (config.lyric.enabled)
+            if (GetPreferenceValue<bool>(InternalDefines.PreferenceNames.LyricCategory.enabled))
             {
                 lyricSources.Add(new LocalSource());
                 // TODO: Load other lyric source
@@ -84,7 +76,7 @@ namespace MiscToolsForMD
         {
             StackTrace trace = new StackTrace();
             string callerName = "[" + trace.GetFrame(1).GetMethod().Name + "] ";
-            if (config.debug)
+            if (GetPreferenceValue<bool>(InternalDefines.PreferenceNames.MainCategory.debug))
             {
                 LoggerInstance.Msg(callerName + log);
             }
@@ -92,6 +84,17 @@ namespace MiscToolsForMD
             {
                 LoggerInstance.Msg(callerName + normalLog);
             }
+        }
+
+        public T GetPreferenceValue<T>(string identifier)
+            where T : new()
+        {
+            return MelonPreferences.GetEntry<T>(InternalDefines.PreferenceNames.MainCategory.name, identifier).Value;
+        }
+        public void UpdatePreferenceValue<T>(string identifier, T value)
+            where T : new()
+        {
+            MelonPreferences.GetEntry<T>(InternalDefines.PreferenceNames.MainCategory.name, identifier).Value = value;
         }
 
         private static void Init()
@@ -107,15 +110,12 @@ namespace MiscToolsForMD
             {
                 instance.Log("Using existing GameObject");
             }
-            indicator = ui.AddComponent<Indicator>();
+            indicator = ui.GetComponent<Indicator>();
+            if (indicator is null)
+            {
+                indicator = ui.AddComponent<Indicator>();
+            }
             instance.Log("Created UI");
-        }
-
-        private void SaveConfig()
-        {
-            string jsonStr = JsonConvert.SerializeObject(config, Formatting.Indented);
-            Directory.CreateDirectory(Path.GetDirectoryName(InternalDefines.configPath));
-            File.WriteAllText(InternalDefines.configPath, jsonStr);
         }
     }
 }

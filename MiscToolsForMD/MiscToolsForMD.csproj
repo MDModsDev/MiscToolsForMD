@@ -102,14 +102,15 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Config.cs" />
-    <Compile Include="KeyInfo.cs" />
-    <Compile Include="LocalSource.cs" />
-    <Compile Include="Defines.cs" />
-    <Compile Include="Lang.cs" />
-    <Compile Include="Lyric.cs" />
+    <Compile Include="CompatibleLayer\CompatibleLayer.cs" />
+    <Compile Include="CompatibleLayer\Config.cs" />
+    <Compile Include="MOD\KeyInfo.cs" />
+    <Compile Include="Lyric\LocalSource.cs" />
+    <Compile Include="MOD\Defines.cs" />
+    <Compile Include="MOD\Lang.cs" />
+    <Compile Include="Lyric\Lyric.cs" />
     <Compile Include="MiscToolsForMDMod.cs" />
-    <Compile Include="MonoBehaviors.cs" />
+    <Compile Include="MOD\MonoBehaviors.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

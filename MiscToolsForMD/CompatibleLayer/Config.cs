@@ -1,4 +1,4 @@
-﻿namespace MiscToolsForMD
+﻿namespace MiscToolsForMD.CompatibleLayer
 {
     public class Config
     {

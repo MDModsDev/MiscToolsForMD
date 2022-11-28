@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace MiscToolsForMD
+namespace MiscToolsForMD.Lyric
 {
     internal class LocalSource : ILyricSource
     {
