@@ -9,7 +9,7 @@ namespace MiscToolsForMD.CompatibleLayer
 {
     public static class CompatibleUtils
     {
-        public static void UpdatePreferences(MelonPreferences_Category preferencesCategory=null)
+        public static void UpdatePreferences(MelonPreferences_Category preferencesCategory = null)
         {
             if (preferencesCategory == null)
             {

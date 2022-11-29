@@ -1,6 +1,4 @@
-﻿using MelonLoader;
-using System;
-using System.IO;
+﻿using System.IO;
 using UnityEngine;
 
 namespace MiscToolsForMD.MOD
@@ -14,9 +12,9 @@ namespace MiscToolsForMD.MOD
     {
         public const int windowRectId = 0;
         public const int lyricWindowId = 1;
-        public static readonly Color32 defaultApColor = new Color(1,0.8f,0,1); // #FFD700
-        public static readonly Color32 defaultGreatColor = new Color(0.2f,0.4f,0.9f); // #4169E1
-        public static readonly Color32 defaultMissColor = new Color(1,1,1); // #FFFFFF
+        public static readonly Color32 defaultApColor = new Color(1, 0.8f, 0, 1); // #FFD700
+        public static readonly Color32 defaultGreatColor = new Color(0.2f, 0.4f, 0.9f); // #4169E1
+        public static readonly Color32 defaultMissColor = new Color(1, 1, 1); // #FFFFFF
         public static readonly Color32 defaultKeyDisplayColor = Color.white;
         public static readonly Color32 defaultKeyPressedColor = Color.black;
 
@@ -32,7 +30,7 @@ namespace MiscToolsForMD.MOD
             public static class LyricCategory
             {
                 public const string name = "lyric";
-                public const string enabled = name+ "_enabled";
+                public const string enabled = name + "_enabled";
                 public const string fontSize = name + "_font_size";
                 public const string coordinate = name + "_coordinate";
                 public const string size = name + "_size";
@@ -54,11 +52,13 @@ namespace MiscToolsForMD.MOD
                 public const string coordinate = name + "_coordinate";
                 public const string size = name + "_size";
             }
+
             public static class HardCoreCategory
             {
                 public const string name = "hardcore";
                 public const string enabled = name + "_enabled";
             }
+
             public static class SoftCoreCategory
             {
                 public const string name = "softcore";
@@ -66,39 +66,8 @@ namespace MiscToolsForMD.MOD
             }
         }
     }
-
-    public static class MelonPreferencesEntryExtends
-    {
-        public static void CreateEntryIfNotExist<T>(this MelonPreferences_Category category, string identifier, T default_value, string display_name = null, string description = null, bool is_hidden = false, bool dont_save_default = false, MelonLoader.Preferences.ValueValidator validator = null, string oldidentifier = null)
-            where T : new()
-        {
-            if (display_name == null)
-            {
-                try
-                {
-                    string displayNameInLang = Lang.GetLang().localizedConfigNames[identifier];
-                    display_name = displayNameInLang;
-                }
-                
-                catch (Exception) { }
-            }
-            if (description == null)
-            {
-                try
-                {
-                    string descriptionInLang = Lang.GetLang().localizedConfigDescriptions[identifier];
-                    description = descriptionInLang;
-                }
-
-                catch (Exception) { }
-            }
-            if (!category.HasEntry(identifier))
-            {
-                category.CreateEntry(identifier, default_value, display_name, description, is_hidden, dont_save_default, validator, oldidentifier);
-            }
-        }
-    }
 }
+
 namespace MiscToolsForMD.CompatibleLayer
 {
     internal static class LegacyInternalDefines

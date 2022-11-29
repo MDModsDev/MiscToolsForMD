@@ -2,6 +2,8 @@
 using HarmonyLib;
 using MelonLoader;
 using MiscToolsForMD.CompatibleLayer;
+using MiscToolsForMD.Extends;
+using MiscToolsForMD.Language;
 using MiscToolsForMD.Lyric;
 using MiscToolsForMD.MOD;
 using System.Collections.Generic;
@@ -91,6 +93,7 @@ namespace MiscToolsForMD
         {
             return MelonPreferences.GetEntry<T>(InternalDefines.PreferenceNames.MainCategory.name, identifier).Value;
         }
+
         public void UpdatePreferenceValue<T>(string identifier, T value)
             where T : new()
         {

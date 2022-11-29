@@ -1,8 +1,9 @@
 ﻿using Assets.Scripts.Database;
 using Assets.Scripts.PeroTools.Commons;
 using FormulaBase;
-using MiscToolsForMD.SDK;
+using MiscToolsForMD.Language;
 using MiscToolsForMD.Lyric;
+using MiscToolsForMD.SDK;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -22,13 +23,15 @@ namespace MiscToolsForMD.MOD
         private GUIStyle accuracyStyle, labelStyle, lyricStyle;
         private Color32 apColor, displayColor, pressingColor, missColor, greatColor;
         internal Lang lang = Lang.GetLang();
-        private readonly bool keyEnabled = 
+
+        private readonly bool keyEnabled =
             MiscToolsForMDMod.instance.GetPreferenceValue<bool>(InternalDefines.PreferenceNames.IndicatorCategory.keyEnabled);
+
         private readonly bool lyricEnabled =
             MiscToolsForMDMod.instance.GetPreferenceValue<bool>(InternalDefines.PreferenceNames.LyricCategory.enabled);
+
         private readonly bool apEnabled =
             MiscToolsForMDMod.instance.GetPreferenceValue<bool>(InternalDefines.PreferenceNames.IndicatorCategory.apEnabled);
-
 
         public Indicator(IntPtr intPtr) : base(intPtr)
         {

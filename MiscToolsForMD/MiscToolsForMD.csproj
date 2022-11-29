@@ -104,10 +104,14 @@
   <ItemGroup>
     <Compile Include="CompatibleLayer\CompatibleLayer.cs" />
     <Compile Include="CompatibleLayer\Config.cs" />
+    <Compile Include="Extends.cs" />
+    <Compile Include="Language\EnglishProvider.cs" />
+    <Compile Include="Language\LanguageProvider.cs" />
+    <Compile Include="Language\SimplifiedChineseProvider.cs" />
     <Compile Include="MOD\KeyInfo.cs" />
     <Compile Include="Lyric\LocalSource.cs" />
     <Compile Include="MOD\Defines.cs" />
-    <Compile Include="MOD\Lang.cs" />
+    <Compile Include="Language\Lang.cs" />
     <Compile Include="Lyric\Lyric.cs" />
     <Compile Include="MiscToolsForMDMod.cs" />
     <Compile Include="MOD\MonoBehaviors.cs" />
@@ -121,5 +125,6 @@
       <Private>False</Private>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
