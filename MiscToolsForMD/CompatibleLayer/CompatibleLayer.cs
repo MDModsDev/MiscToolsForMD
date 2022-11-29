@@ -29,25 +29,25 @@ namespace MiscToolsForMD.CompatibleLayer
                 SetPreferenceValue(preferencesCategory, InternalDefines.PreferenceNames.IndicatorCategory.apSize, legacyConfig.indicator.ap.size);
                 if (ColorUtility.DoTryParseHtmlColor(legacyConfig.indicator.ap.ap, out Color32 tempColor))
                 {
-                    SetPreferenceValue(preferencesCategory, InternalDefines.PreferenceNames.IndicatorCategory.apColor, (Color)tempColor);
+                    SetPreferenceValue(preferencesCategory, InternalDefines.PreferenceNames.IndicatorCategory.apColor, tempColor);
                 }
                 if (ColorUtility.DoTryParseHtmlColor(legacyConfig.indicator.ap.great, out tempColor))
                 {
-                    SetPreferenceValue(preferencesCategory, InternalDefines.PreferenceNames.IndicatorCategory.greatColor, (Color)tempColor);
+                    SetPreferenceValue(preferencesCategory, InternalDefines.PreferenceNames.IndicatorCategory.greatColor, tempColor);
                 }
                 if (ColorUtility.DoTryParseHtmlColor(legacyConfig.indicator.ap.miss, out tempColor))
                 {
-                    SetPreferenceValue(preferencesCategory, InternalDefines.PreferenceNames.IndicatorCategory.missColor, (Color)tempColor);
+                    SetPreferenceValue(preferencesCategory, InternalDefines.PreferenceNames.IndicatorCategory.missColor, tempColor);
                 }
                 SetPreferenceValue(preferencesCategory, InternalDefines.PreferenceNames.IndicatorCategory.keyEnabled, legacyConfig.indicator.key.enabled);
                 SetPreferenceValue(preferencesCategory, InternalDefines.PreferenceNames.IndicatorCategory.keySize, legacyConfig.indicator.key.size);
                 if (ColorUtility.DoTryParseHtmlColor(legacyConfig.indicator.key.display, out tempColor))
                 {
-                    SetPreferenceValue(preferencesCategory, InternalDefines.PreferenceNames.IndicatorCategory.keyDisplay, (Color)tempColor);
+                    SetPreferenceValue(preferencesCategory, InternalDefines.PreferenceNames.IndicatorCategory.keyDisplay, tempColor);
                 }
                 if (ColorUtility.DoTryParseHtmlColor(legacyConfig.indicator.key.pressing, out tempColor))
                 {
-                    SetPreferenceValue(preferencesCategory, InternalDefines.PreferenceNames.IndicatorCategory.keyPressed, (Color)tempColor);
+                    SetPreferenceValue(preferencesCategory, InternalDefines.PreferenceNames.IndicatorCategory.keyPressed, tempColor);
                 }
                 SetPreferenceValue(preferencesCategory, InternalDefines.PreferenceNames.IndicatorCategory.coordinate, new Vector2(legacyConfig.indicator.x, legacyConfig.indicator.y));
                 SetPreferenceValue(preferencesCategory, InternalDefines.PreferenceNames.IndicatorCategory.size, new Vector2(legacyConfig.indicator.width, legacyConfig.indicator.height));

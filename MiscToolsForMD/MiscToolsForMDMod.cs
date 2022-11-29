@@ -19,34 +19,34 @@ namespace MiscToolsForMD
         public static Indicator indicator;
         internal List<ILyricSource> lyricSources = new List<ILyricSource>();
 
-        public override void OnInitializeMelon()
-        {
-            MelonPreferences_Category mainCategory = MelonPreferences.CreateCategory(InternalDefines.PreferenceNames.MainCategory.name, InternalDefines.PreferenceNames.MainCategory.name);
-            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.MainCategory.debug, false, description: "Debug mode of the mod");
-            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.MainCategory.fontSize, 24, description: "Font size");
-            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.LyricCategory.enabled, false, description: "Enable lyric display");
-            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.LyricCategory.fontSize, 36, description: "Font size of lyric panel");
-            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.LyricCategory.coordinate, new Vector2(-1, -1), description: "The coordinate of lyric panel");
-            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.LyricCategory.size, new Vector2(500, 100), description: "The size of lyric panel");
-            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.IndicatorCategory.apEnabled, true, description: "If enable realtime AP indicator");
-            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.IndicatorCategory.apManual, false, description: "If using realtime accuracy value calculated by mod");
-            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.IndicatorCategory.apSize, 36, description: "Font size of accuracy text");
-            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.IndicatorCategory.apColor, InternalDefines.defaultApColor, description: "Text color when player is AP");
-            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.IndicatorCategory.greatColor, InternalDefines.defaultGreatColor, description: "Text color when player is Full Combo");
-            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.IndicatorCategory.missColor, InternalDefines.defaultMissColor, description: "Text color when player is Missed");
-            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.IndicatorCategory.keyEnabled, true, description: "If enable key indicator");
-            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.IndicatorCategory.keySize, 36, description: "Font size of key text");
-            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.IndicatorCategory.keyDisplay, InternalDefines.defaultKeyDisplayColor, description: "Font color of all key text");
-            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.IndicatorCategory.keyPressed, InternalDefines.defaultKeyPressedColor, description: "Font color of pressed key text");
-            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.IndicatorCategory.coordinate, new Vector2(-1, -1), description: "The coordinate of indicator panel");
-            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.IndicatorCategory.size, new Vector2(500, 100), description: "The size of indicator panel");
-            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.HardCoreCategory.enabled, false, description: "If enable HardCore mode");
-            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.SoftCoreCategory.enabled, false, description: "If enable SoftCore mode");
-        }
-
         public override void OnLateInitializeMelon()
         {
+            MelonPreferences_Category mainCategory = MelonPreferences.CreateCategory(
+                InternalDefines.PreferenceNames.MainCategory.name,
+                Lang.GetLang().localizedConfigDescriptions[InternalDefines.PreferenceNames.MainCategory.name]
+            );
+            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.MainCategory.debug, false);
+            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.MainCategory.fontSize, 24);
+            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.LyricCategory.enabled, false);
+            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.LyricCategory.fontSize, 36);
+            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.LyricCategory.coordinate, new Vector2(-1, -1));
+            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.LyricCategory.size, new Vector2(500, 100));
+            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.IndicatorCategory.apEnabled, true);
+            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.IndicatorCategory.apManual, false);
+            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.IndicatorCategory.apSize, 36);
+            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.IndicatorCategory.apColor, InternalDefines.defaultApColor);
+            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.IndicatorCategory.greatColor, InternalDefines.defaultGreatColor);
+            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.IndicatorCategory.missColor, InternalDefines.defaultMissColor);
+            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.IndicatorCategory.keyEnabled, true);
+            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.IndicatorCategory.keySize, 36);
+            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.IndicatorCategory.keyDisplay, InternalDefines.defaultKeyDisplayColor);
+            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.IndicatorCategory.keyPressed, InternalDefines.defaultKeyPressedColor);
+            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.IndicatorCategory.coordinate, new Vector2(-1, -1));
+            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.IndicatorCategory.size, new Vector2(500, 100));
+            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.HardCoreCategory.enabled, false);
+            mainCategory.CreateEntryIfNotExist(InternalDefines.PreferenceNames.SoftCoreCategory.enabled, false);
             CompatibleUtils.UpdatePreferences();
+
             MelonPreferences.SetEntryValue(InternalDefines.PreferenceNames.MainCategory.name, InternalDefines.PreferenceNames.MainCategory.debug,
                 GetPreferenceValue<bool>(InternalDefines.PreferenceNames.MainCategory.debug) || MelonDebug.IsEnabled());
             LoggerInstance.Msg("Debug mode:" + GetPreferenceValue<bool>(InternalDefines.PreferenceNames.MainCategory.debug));
