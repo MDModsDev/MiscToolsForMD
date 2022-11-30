@@ -89,7 +89,15 @@ namespace MiscToolsForMD.SDK
         public const string attrCheckerId = "attrChecker";
         public const string id = "MiscToolsForMD.SDK";
     }
-
+    public enum Difficulty
+    {
+        UNKNOWN,
+        EASY,
+        NORMAL,
+        HARD,
+        HIDDEM,
+        SPELL
+    }
     public interface ISingleOnly
     { }
 

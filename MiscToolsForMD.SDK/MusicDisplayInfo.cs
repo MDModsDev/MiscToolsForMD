@@ -11,6 +11,15 @@
         /// Author of the song
         /// </summary>
         public string authorName;
+        /// <summary>
+        /// Level of the song
+        /// </summary>
+        public int musicLevel;
+        /// <summary>
+        /// Difficulty of the song. <br/>See
+        /// <seealso cref="Difficulty"/>
+        /// </summary>
+        public Difficulty difficulty;
 
         public override string ToString()
         {

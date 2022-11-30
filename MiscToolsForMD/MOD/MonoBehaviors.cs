@@ -21,12 +21,19 @@ namespace MiscToolsForMD.MOD
         private List<Lyric.Lyric> lyrics;
         private Rect windowRect, lyricWindowRect;
         private GUIStyle accuracyStyle, labelStyle, lyricStyle;
-        private Color32 apColor, displayColor, pressingColor, missColor, greatColor;
-        internal Lang lang = Lang.GetLang();
-
+        private readonly Color32 apColor =
+            MiscToolsForMDMod.instance.GetPreferenceValue<Color32>(InternalDefines.PreferenceNames.IndicatorCategory.apColor);
+        private readonly Color32 displayColor =
+            MiscToolsForMDMod.instance.GetPreferenceValue<Color32>(InternalDefines.PreferenceNames.IndicatorCategory.keyDisplay);
+        private readonly Color32 pressingColor =
+            MiscToolsForMDMod.instance.GetPreferenceValue<Color32>(InternalDefines.PreferenceNames.IndicatorCategory.keyPressed);
+        private readonly Color32 missColor =
+            MiscToolsForMDMod.instance.GetPreferenceValue<Color32>(InternalDefines.PreferenceNames.IndicatorCategory.missColor);
+        private readonly Color32 greatColor =
+            MiscToolsForMDMod.instance.GetPreferenceValue<Color32>(InternalDefines.PreferenceNames.IndicatorCategory.greatColor);
+        private readonly Lang lang = Lang.GetLang();
         private readonly bool keyEnabled =
             MiscToolsForMDMod.instance.GetPreferenceValue<bool>(InternalDefines.PreferenceNames.IndicatorCategory.keyEnabled);
-
         private readonly bool lyricEnabled =
             MiscToolsForMDMod.instance.GetPreferenceValue<bool>(InternalDefines.PreferenceNames.LyricCategory.enabled);
 
@@ -63,7 +70,6 @@ namespace MiscToolsForMD.MOD
                     width = MiscToolsForMDMod.instance.GetPreferenceValue<Vector2>(InternalDefines.PreferenceNames.IndicatorCategory.size).x,
                     height = MiscToolsForMDMod.instance.GetPreferenceValue<Vector2>(InternalDefines.PreferenceNames.IndicatorCategory.size).y,
                 };
-                PrepareColors();
                 PrepareStyles();
                 accuracyStyle.normal.textColor = apColor;
                 accuracyText = string.Format("{0:P}", 1);
@@ -77,9 +83,10 @@ namespace MiscToolsForMD.MOD
             if (MiscToolsForMDMod.instance.GetPreferenceValue<bool>(InternalDefines.PreferenceNames.MainCategory.debug))
             {
                 MusicDisplayInfo musicDisplayInfo = MiscTools.realtimeGameStatics.GetMusicDisplayInfo();
-                MiscToolsForMDMod.instance.Log(string.Format("Song name:{0};author:{1}", musicDisplayInfo.musicName, musicDisplayInfo.authorName));
+                MiscToolsForMDMod.instance.Log(string.Format("Song name:{0};Song author:{1};Song Level:{2};Song difficulty:{3}", 
+                    musicDisplayInfo.musicName, musicDisplayInfo.authorName, musicDisplayInfo.musicLevel, musicDisplayInfo.difficulty));
                 string musicDatasJsonPath = Path.Combine(SDK.PublicDefines.basePath, "MusicDatas");
-                string musicDatasJsonFile = Path.Combine(musicDatasJsonPath, string.Format("{0}-{1}-{2}.json", musicDisplayInfo.musicName, musicDisplayInfo.authorName, DataHelper.selectedMusicLevel));
+                string musicDatasJsonFile = Path.Combine(musicDatasJsonPath, string.Format("{0}-{1}-{2}.json", musicDisplayInfo.musicName, musicDisplayInfo.authorName, musicDisplayInfo.musicLevel));
                 MiscTools.realtimeGameStatics.ExportMusicDatasTo(musicDatasJsonFile);
                 MiscToolsForMDMod.instance.Log("Exported MusicDatas to " + musicDatasJsonFile);
             }
@@ -218,8 +225,8 @@ namespace MiscToolsForMD.MOD
             {
                 x = MiscToolsForMDMod.instance.GetPreferenceValue<Vector2>(InternalDefines.PreferenceNames.LyricCategory.coordinate).x,
                 y = MiscToolsForMDMod.instance.GetPreferenceValue<Vector2>(InternalDefines.PreferenceNames.LyricCategory.coordinate).y,
-                height = MiscToolsForMDMod.instance.GetPreferenceValue<Vector2>(InternalDefines.PreferenceNames.LyricCategory.size).x,
-                width = MiscToolsForMDMod.instance.GetPreferenceValue<Vector2>(InternalDefines.PreferenceNames.LyricCategory.size).y,
+                width = MiscToolsForMDMod.instance.GetPreferenceValue<Vector2>(InternalDefines.PreferenceNames.LyricCategory.size).x,
+                height = MiscToolsForMDMod.instance.GetPreferenceValue<Vector2>(InternalDefines.PreferenceNames.LyricCategory.size).y,
             };
             bool successGetLyric = false;
             foreach (ILyricSource source in MiscToolsForMDMod.instance.lyricSources)
@@ -240,15 +247,6 @@ namespace MiscToolsForMD.MOD
                 MiscToolsForMDMod.instance.UpdatePreferenceValue(InternalDefines.PreferenceNames.LyricCategory.enabled, false);
                 MiscToolsForMDMod.instance.LoggerInstance.Error("No available lyric. We will disable lyric displaying.");
             }
-        }
-
-        private void PrepareColors()
-        {
-            apColor = MiscToolsForMDMod.instance.GetPreferenceValue<Color>(InternalDefines.PreferenceNames.IndicatorCategory.apColor);
-            greatColor = MiscToolsForMDMod.instance.GetPreferenceValue<Color>(InternalDefines.PreferenceNames.IndicatorCategory.greatColor);
-            missColor = MiscToolsForMDMod.instance.GetPreferenceValue<Color>(InternalDefines.PreferenceNames.IndicatorCategory.missColor);
-            displayColor = MiscToolsForMDMod.instance.GetPreferenceValue<Color>(InternalDefines.PreferenceNames.IndicatorCategory.keyDisplay);
-            pressingColor = MiscToolsForMDMod.instance.GetPreferenceValue<Color>(InternalDefines.PreferenceNames.IndicatorCategory.keyPressed);
         }
 
         private void UpdateAccuracy()

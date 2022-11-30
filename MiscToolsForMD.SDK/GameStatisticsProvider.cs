@@ -3,8 +3,6 @@ using Assets.Scripts.GameCore.HostComponent;
 using Assets.Scripts.GameCore.Managers;
 using Assets.Scripts.PeroTools.Commons;
 using Assets.Scripts.PeroTools.Managers;
-using Assets.Scripts.PeroTools.Nice.Datas;
-using Assets.Scripts.PeroTools.Nice.Interface;
 using FormulaBase;
 using GameLogic;
 using HarmonyLib;
@@ -63,7 +61,7 @@ namespace MiscToolsForMD.SDK
         }
 
         /// <summary>
-        /// Get music info of current playing music.
+        /// Get music info of current playing music. See
         /// <seealso cref="StatisticsManager.OnBattleStart">
         /// </summary>
         /// <returns>
@@ -72,15 +70,18 @@ namespace MiscToolsForMD.SDK
         public MusicDisplayInfo GetMusicDisplayInfo()
         {
             string musicName, musicAuthor;
-            SingletonDataObject singletonDataObject = Singleton<DataManager>.instance["Account"];
-            string selectedAlbumName = VariableUtils.GetResult<string>(singletonDataObject["SelectedAlbumName"]);
-            string selectedMusicUid = VariableUtils.GetResult<string>(singletonDataObject["SelectedMusicUid"]);
-            musicAuthor = Singleton<ConfigManager>.instance.GetConfigStringValue(selectedAlbumName, "uid", "author", selectedMusicUid);
-            musicName = VariableUtils.GetResult<string>(Singleton<DataManager>.instance["Account"]["SelectedMusicName"]);
+            string selectedAlbumName = DataHelper.selectedAlbumName;
+            string selectedMusicUid = DataHelper.selectedMusicUid;
+            ConfigManager configManager = Singleton<ConfigManager>.instance;
+            musicAuthor = configManager.GetConfigStringValue(selectedAlbumName, "uid", "author", selectedMusicUid);
+            musicName = configManager.GetConfigStringValue(selectedAlbumName, "uid", "name", selectedMusicUid);
+            // See https://github.com/MDModsDev/SongDesc/blob/master/Patch.cs
             return new MusicDisplayInfo()
             {
                 musicName = musicName,
-                authorName = musicAuthor
+                authorName = musicAuthor,
+                musicLevel = DataHelper.selectedMusicLevel,
+                difficulty = (Difficulty)DataHelper.selectedDifficulty
             };
         }
 
