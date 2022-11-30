@@ -1,5 +1,4 @@
-﻿using Assets.Scripts.Database;
-using Assets.Scripts.PeroTools.Commons;
+﻿using Assets.Scripts.PeroTools.Commons;
 using FormulaBase;
 using MiscToolsForMD.Language;
 using MiscToolsForMD.Lyric;
@@ -36,9 +35,18 @@ namespace MiscToolsForMD.MOD
             MiscToolsForMDMod.instance.GetPreferenceValue<bool>(InternalDefines.PreferenceNames.IndicatorCategory.keyEnabled);
         private readonly bool lyricEnabled =
             MiscToolsForMDMod.instance.GetPreferenceValue<bool>(InternalDefines.PreferenceNames.LyricCategory.enabled);
-
         private readonly bool apEnabled =
             MiscToolsForMDMod.instance.GetPreferenceValue<bool>(InternalDefines.PreferenceNames.IndicatorCategory.apEnabled);
+        private readonly int keySize =
+            MiscToolsForMDMod.instance.GetPreferenceValue<int>(InternalDefines.PreferenceNames.IndicatorCategory.keySize);
+        private readonly int apSize =
+            MiscToolsForMDMod.instance.GetPreferenceValue<int>(InternalDefines.PreferenceNames.IndicatorCategory.apSize);
+        private readonly int lyricSize =
+            MiscToolsForMDMod.instance.GetPreferenceValue<int>(InternalDefines.PreferenceNames.LyricCategory.fontSize);
+        private readonly int labelSize =
+            MiscToolsForMDMod.instance.GetPreferenceValue<int>(InternalDefines.PreferenceNames.MainCategory.fontSize);
+        private readonly bool apManual =
+            MiscToolsForMDMod.instance.GetPreferenceValue<bool>(InternalDefines.PreferenceNames.IndicatorCategory.apManual);
 
         public Indicator(IntPtr intPtr) : base(intPtr)
         {
@@ -50,25 +58,22 @@ namespace MiscToolsForMD.MOD
         {
             if (apEnabled || keyEnabled)
             {
-                if (MiscToolsForMDMod.instance.GetPreferenceValue<Vector2>(InternalDefines.PreferenceNames.IndicatorCategory.coordinate).x < 0)
+                Vector2 indicatorCoordinate = 
+                    MiscToolsForMDMod.instance.GetPreferenceValue<Vector2>(InternalDefines.PreferenceNames.IndicatorCategory.coordinate);
+                Vector2 indicatorSize = 
+                    MiscToolsForMDMod.instance.GetPreferenceValue<Vector2>(InternalDefines.PreferenceNames.IndicatorCategory.size);
+                if (indicatorCoordinate.x < 0)
                 {
-                    Vector2 indicatorCoordinate = MiscToolsForMDMod.instance.GetPreferenceValue<Vector2>(InternalDefines.PreferenceNames.IndicatorCategory.coordinate);
-                    indicatorCoordinate.x =
-                        (Screen.width - MiscToolsForMDMod.instance.GetPreferenceValue<Vector2>(InternalDefines.PreferenceNames.IndicatorCategory.size).x) / 2;
-                    MiscToolsForMDMod.instance.UpdatePreferenceValue(InternalDefines.PreferenceNames.IndicatorCategory.coordinate, indicatorCoordinate);
+                    indicatorCoordinate.x = (Screen.width - indicatorSize.x) / 2;
                 }
-                if (MiscToolsForMDMod.instance.GetPreferenceValue<Vector2>(InternalDefines.PreferenceNames.IndicatorCategory.coordinate).y < 0)
+                if (indicatorCoordinate.y < 0)
                 {
-                    Vector2 indicatorCoordinate = MiscToolsForMDMod.instance.GetPreferenceValue<Vector2>(InternalDefines.PreferenceNames.IndicatorCategory.coordinate);
                     indicatorCoordinate.y = 20;
-                    MiscToolsForMDMod.instance.UpdatePreferenceValue(InternalDefines.PreferenceNames.IndicatorCategory.coordinate, indicatorCoordinate);
                 }
                 windowRect = new Rect()
                 {
-                    x = MiscToolsForMDMod.instance.GetPreferenceValue<Vector2>(InternalDefines.PreferenceNames.IndicatorCategory.coordinate).x,
-                    y = MiscToolsForMDMod.instance.GetPreferenceValue<Vector2>(InternalDefines.PreferenceNames.IndicatorCategory.coordinate).y,
-                    width = MiscToolsForMDMod.instance.GetPreferenceValue<Vector2>(InternalDefines.PreferenceNames.IndicatorCategory.size).x,
-                    height = MiscToolsForMDMod.instance.GetPreferenceValue<Vector2>(InternalDefines.PreferenceNames.IndicatorCategory.size).y,
+                    position = indicatorCoordinate,
+                    size = indicatorSize
                 };
                 PrepareStyles();
                 accuracyStyle.normal.textColor = apColor;
@@ -86,7 +91,10 @@ namespace MiscToolsForMD.MOD
                 MiscToolsForMDMod.instance.Log(string.Format("Song name:{0};Song author:{1};Song Level:{2};Song difficulty:{3}", 
                     musicDisplayInfo.musicName, musicDisplayInfo.authorName, musicDisplayInfo.musicLevel, musicDisplayInfo.difficulty));
                 string musicDatasJsonPath = Path.Combine(SDK.PublicDefines.basePath, "MusicDatas");
-                string musicDatasJsonFile = Path.Combine(musicDatasJsonPath, string.Format("{0}-{1}-{2}.json", musicDisplayInfo.musicName, musicDisplayInfo.authorName, musicDisplayInfo.musicLevel));
+                string musicDatasJsonFile = 
+                    Path.Combine(
+                        musicDatasJsonPath, 
+                        string.Format("{0}-{1}-{2}.json", musicDisplayInfo.musicName, musicDisplayInfo.authorName, musicDisplayInfo.musicLevel));
                 MiscTools.realtimeGameStatics.ExportMusicDatasTo(musicDatasJsonFile);
                 MiscToolsForMDMod.instance.Log("Exported MusicDatas to " + musicDatasJsonFile);
             }
@@ -140,17 +148,17 @@ namespace MiscToolsForMD.MOD
             accuracyStyle = new GUIStyle()
             {
                 alignment = TextAnchor.MiddleCenter,
-                fontSize = MiscToolsForMDMod.instance.GetPreferenceValue<int>(InternalDefines.PreferenceNames.IndicatorCategory.apSize)
+                fontSize = apSize
             };
             lyricStyle = new GUIStyle()
             {
                 alignment = TextAnchor.MiddleCenter,
-                fontSize = MiscToolsForMDMod.instance.GetPreferenceValue<int>(InternalDefines.PreferenceNames.LyricCategory.fontSize)
+                fontSize = lyricSize
             };
             labelStyle = new GUIStyle()
             {
                 alignment = TextAnchor.MiddleCenter,
-                fontSize = MiscToolsForMDMod.instance.GetPreferenceValue<int>(InternalDefines.PreferenceNames.MainCategory.fontSize)
+                fontSize = labelSize
             };
         }
 
@@ -172,7 +180,7 @@ namespace MiscToolsForMD.MOD
                         style = new GUIStyle()
                         {
                             alignment = TextAnchor.MiddleCenter,
-                            fontSize = MiscToolsForMDMod.instance.GetPreferenceValue<int>(InternalDefines.PreferenceNames.IndicatorCategory.keySize)
+                            fontSize = keySize
                         }
                     };
                     if (i < controlKeysNum)
@@ -206,27 +214,20 @@ namespace MiscToolsForMD.MOD
         {
             MusicDisplayInfo musicDisplayInfo = MiscTools.realtimeGameStatics.GetMusicDisplayInfo();
             MiscToolsForMDMod.instance.Log(string.Format("Song name:{0};author:{1}", musicDisplayInfo.musicName, musicDisplayInfo.authorName));
-            if (MiscToolsForMDMod.instance.GetPreferenceValue<Vector2>(InternalDefines.PreferenceNames.LyricCategory.coordinate).x < 0)
+            Vector2 lyricCoordinate = MiscToolsForMDMod.instance.GetPreferenceValue<Vector2>(InternalDefines.PreferenceNames.LyricCategory.coordinate);
+            Vector2 lyricSize = MiscToolsForMDMod.instance.GetPreferenceValue<Vector2>(InternalDefines.PreferenceNames.LyricCategory.size);
+            if (lyricCoordinate.x < 0)
             {
-                Vector2 lyricCoordinate = MiscToolsForMDMod.instance.GetPreferenceValue<Vector2>(InternalDefines.PreferenceNames.LyricCategory.coordinate);
-                lyricCoordinate.x =
-                    (MiscToolsForMDMod.instance.GetPreferenceValue<Vector2>(InternalDefines.PreferenceNames.LyricCategory.size).x) / 2;
-                MiscToolsForMDMod.instance.UpdatePreferenceValue(InternalDefines.PreferenceNames.LyricCategory.coordinate, lyricCoordinate);
+                lyricCoordinate.x = lyricSize.x / 2;
             }
-
-            if (MiscToolsForMDMod.instance.GetPreferenceValue<Vector2>(InternalDefines.PreferenceNames.LyricCategory.coordinate).y < 0)
+            if (lyricCoordinate.y < 0)
             {
-                Vector2 lyricCoordinate = MiscToolsForMDMod.instance.GetPreferenceValue<Vector2>(InternalDefines.PreferenceNames.LyricCategory.coordinate);
-                lyricCoordinate.y =
-                    Screen.height - MiscToolsForMDMod.instance.GetPreferenceValue<Vector2>(InternalDefines.PreferenceNames.LyricCategory.size).y - 100;
-                MiscToolsForMDMod.instance.UpdatePreferenceValue(InternalDefines.PreferenceNames.LyricCategory.coordinate, lyricCoordinate);
+                lyricCoordinate.y = Screen.height - lyricSize.y - 100;
             }
             lyricWindowRect = new Rect()
             {
-                x = MiscToolsForMDMod.instance.GetPreferenceValue<Vector2>(InternalDefines.PreferenceNames.LyricCategory.coordinate).x,
-                y = MiscToolsForMDMod.instance.GetPreferenceValue<Vector2>(InternalDefines.PreferenceNames.LyricCategory.coordinate).y,
-                width = MiscToolsForMDMod.instance.GetPreferenceValue<Vector2>(InternalDefines.PreferenceNames.LyricCategory.size).x,
-                height = MiscToolsForMDMod.instance.GetPreferenceValue<Vector2>(InternalDefines.PreferenceNames.LyricCategory.size).y,
+                position = lyricCoordinate,
+                size = lyricSize,
             };
             bool successGetLyric = false;
             foreach (ILyricSource source in MiscToolsForMDMod.instance.lyricSources)
@@ -269,7 +270,7 @@ namespace MiscToolsForMD.MOD
             MiscToolsForMDMod.instance.Log(string.Format("targetWeight:{0};actualWeight:{1}", targetWeight, actualWeight));
             MiscToolsForMDMod.instance.Log(string.Format("targetWeightInGame:{0};actualWeightInGame:{1}", targetWeightInGame, actualWeightInGame));
             MiscToolsForMDMod.instance.Log(string.Format("trueAccBySelf:{0};trueAccInGame:{1}", trueAccBySelf, trueAccInGame));
-            float trueAcc = MiscToolsForMDMod.instance.GetPreferenceValue<bool>(InternalDefines.PreferenceNames.IndicatorCategory.apManual) ? trueAccBySelf : trueAccInGame;
+            float trueAcc = apManual ? trueAccBySelf : trueAccInGame;
             float acc = Mathf.RoundToInt(trueAcc / unit) * unit;
             // See Assets.Scripts.GameCore.HostComponent.TaskStageTarget.GetAccuracy
             if (trueAcc < acc && (acc == 0.6f || acc == 0.7f || acc == 0.8f || acc == 0.9f || acc == 1.0f))
@@ -297,12 +298,12 @@ namespace MiscToolsForMD.MOD
         private void IndicatorWindow(int windowId)
         {
             GUILayout.BeginVertical(null);
-            if (MiscToolsForMDMod.instance.GetPreferenceValue<bool>(InternalDefines.PreferenceNames.IndicatorCategory.apEnabled))
+            if (apEnabled)
             {
                 GUILayout.Label(accuracyText, accuracyStyle, null);
                 GUILayout.Space(10f);
             }
-            if (MiscToolsForMDMod.instance.GetPreferenceValue<bool>(InternalDefines.PreferenceNames.IndicatorCategory.keyEnabled))
+            if (keyEnabled)
             {
                 GUILayout.BeginHorizontal(null);
                 foreach (ControlType type in Enum.GetValues(typeof(ControlType)))
