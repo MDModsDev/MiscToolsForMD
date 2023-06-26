@@ -1,12 +1,11 @@
-using System;
-using System.Collections.Generic;
-
-namespace MiscToolsForMD.SDK
+﻿namespace MiscToolsForMD.SDK
 {
-    internal static class InstancesManager
+    public interface ISingleOnly
+    { }
+
+    public static class InstancesManager
     {
-        private static readonly List<ISingleOnly> instances = new List<ISingleOnly>();
-        private static readonly HarmonyLib.Harmony harmonyInstance = new HarmonyLib.Harmony(PublicDefines.id);
+        private static readonly List<ISingleOnly> instances = new();
 
         /// <summary>
         /// Get single instance globally.
@@ -15,7 +14,7 @@ namespace MiscToolsForMD.SDK
         /// Any object implements ISingleOnly interface.
         /// </typeparam>
         /// <returns>
-        /// The globally single instance of type <c>T</c>.
+        /// The globally single instance of type given.
         /// </returns>
         public static T GetInstance<T>()
             where T : ISingleOnly, new()
@@ -31,11 +30,6 @@ namespace MiscToolsForMD.SDK
             instances.Add(instance);
             AttributeChecker.Check(instance);
             return instance;
-        }
-
-        public static HarmonyLib.Harmony GetHarmony()
-        {
-            return harmonyInstance;
         }
     }
 }

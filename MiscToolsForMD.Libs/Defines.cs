@@ -1,11 +1,8 @@
-﻿using System.Collections.Generic;
-using System.IO;
-
-namespace MiscToolsForMD.SDK
+﻿namespace MiscToolsForMD.SDK
 {
     public class PublicDefines
     {
-        public static readonly Dictionary<string, string> keyDisplayNames = new Dictionary<string, string>()
+        public static readonly Dictionary<string, string> keyDisplayNames = new()
         {
             { "Backspace", "←" },
             { "Delete", "Del" },
@@ -85,25 +82,6 @@ namespace MiscToolsForMD.SDK
         public static readonly string gamePath = Directory.GetCurrentDirectory();
         public static readonly string dataPath = Path.Combine(gamePath, "UserData");
         public static readonly string basePath = Path.Combine(dataPath, "MiscToolsForMD");
-        public const string statisticProviderId = "currentStatistics";
-        public const string attrCheckerId = "attrChecker";
         public const string id = "MiscToolsForMD.SDK";
-    }
-    public enum Difficulty
-    {
-        UNKNOWN,
-        EASY,
-        NORMAL,
-        HARD,
-        HIDDEM,
-        SPELL
-    }
-    public interface ISingleOnly
-    { }
-
-    internal class InternalDefines
-    {
-        public static readonly string configPath = Path.Combine(PublicDefines.basePath, "MiscToolsForMD.SDK.json");
-        public static readonly string logPath = Path.Combine(PublicDefines.basePath, "MiscToolsForMD.SDK.log");
     }
 }
