@@ -1,4 +1,4 @@
-﻿using MelonLoader;
+using MelonLoader;
 using MiscToolsForMD.SDK;
 
 namespace MiscToolsForMD

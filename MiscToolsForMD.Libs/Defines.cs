@@ -1,4 +1,4 @@
-﻿namespace MiscToolsForMD.SDK
+namespace MiscToolsForMD.SDK
 {
     public class PublicDefines
     {

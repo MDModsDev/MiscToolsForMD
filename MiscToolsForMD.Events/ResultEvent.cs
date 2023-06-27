@@ -1,4 +1,4 @@
-﻿using Il2CppPeroPeroGames.GlobalDefines;
+using Il2CppPeroPeroGames.GlobalDefines;
 
 namespace MiscToolsForMD.SDK
 {

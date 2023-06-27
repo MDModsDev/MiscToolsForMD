@@ -1,4 +1,4 @@
-﻿using MelonLoader;
+using MelonLoader;
 using MiscToolsForMD.SDK;
 
 [assembly: MelonInfo(typeof(Events), "MiscToolsForMD.Events", "0.1.0", "MiscToolsForMD")]

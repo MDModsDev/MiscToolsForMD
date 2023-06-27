@@ -1,4 +1,4 @@
-﻿using MelonLoader;
+using MelonLoader;
 
 [assembly: MelonInfo(typeof(MiscToolsForMD.MiscToolsForMD), "MiscToolsForMD", "0.1.0", "MiscToolsForMD")]
 [assembly: MelonGame("PeroPeroGames", "MuseDash")]
