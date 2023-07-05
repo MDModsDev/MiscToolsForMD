@@ -1,15 +1,5 @@
-namespace MiscToolsForMD.SDK
+﻿namespace MiscToolsForMD.SDK
 {
-    public enum Difficulty
-    {
-        UNKNOWN,
-        EASY,
-        NORMAL,
-        HARD,
-        HIDDEN,
-        SPELL
-    }
-
     public readonly struct MusicDisplayInfo
     {
         internal MusicDisplayInfo(string musicName, string authorName, string albumJsonName, int stageLevel, Difficulty difficulty)
@@ -27,7 +17,4 @@ namespace MiscToolsForMD.SDK
         public int stageLevel { get; }
         public Difficulty difficulty { get; }
     }
-
-    public class MusicInfoUpdatedEvent : Event<MusicDisplayInfo>
-    { }
 }
