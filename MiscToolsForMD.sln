@@ -1,18 +1,13 @@
-
+﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.6.33801.468
+VisualStudioVersion = 17.7.34031.279
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiscToolsForMD", "MiscToolsForMD\MiscToolsForMD.csproj", "{430B9960-ADD0-42E4-8A3D-90653AD7E3B3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MiscToolsForMD.Libs", "MiscToolsForMD.Libs\MiscToolsForMD.Libs.csproj", "{20FCA61A-B9EF-46C9-971E-48F2BE756E1E}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "解决方案项", "解决方案项", "{2679603B-407E-4038-8C54-D44C88A4A519}"
-	ProjectSection(SolutionItems) = preProject
-		.editorconfig = .editorconfig
-	EndProjectSection
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MiscToolsForMD.RealtimeStatistics", "MiscToolsForMD.RealtimeStatistics\MiscToolsForMD.RealtimeStatistics.csproj", "{B72CBC89-E250-4CFB-9690-38D1D6CFB891}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiscToolsForMD.Events", "MiscToolsForMD.Events\MiscToolsForMD.Events.csproj", "{B17D868A-321E-4CDD-9703-19049A375F4A}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiscToolsForMD.Libs", "MiscToolsForMD.Libs\MiscToolsForMD.Libs.csproj", "{BD718CAA-21C1-404C-8420-A6513FA2776B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MiscToolsForMD.SyncLyrics", "MiscToolsForMD.SyncLyrics\MiscToolsForMD.SyncLyrics.csproj", "{C9A8C287-A7AE-45BD-9565-12CBB4B038AA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -20,23 +15,23 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{430B9960-ADD0-42E4-8A3D-90653AD7E3B3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{430B9960-ADD0-42E4-8A3D-90653AD7E3B3}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{430B9960-ADD0-42E4-8A3D-90653AD7E3B3}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{430B9960-ADD0-42E4-8A3D-90653AD7E3B3}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B17D868A-321E-4CDD-9703-19049A375F4A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B17D868A-321E-4CDD-9703-19049A375F4A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B17D868A-321E-4CDD-9703-19049A375F4A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B17D868A-321E-4CDD-9703-19049A375F4A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{BD718CAA-21C1-404C-8420-A6513FA2776B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{BD718CAA-21C1-404C-8420-A6513FA2776B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{BD718CAA-21C1-404C-8420-A6513FA2776B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{BD718CAA-21C1-404C-8420-A6513FA2776B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{20FCA61A-B9EF-46C9-971E-48F2BE756E1E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{20FCA61A-B9EF-46C9-971E-48F2BE756E1E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{20FCA61A-B9EF-46C9-971E-48F2BE756E1E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{20FCA61A-B9EF-46C9-971E-48F2BE756E1E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B72CBC89-E250-4CFB-9690-38D1D6CFB891}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B72CBC89-E250-4CFB-9690-38D1D6CFB891}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B72CBC89-E250-4CFB-9690-38D1D6CFB891}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B72CBC89-E250-4CFB-9690-38D1D6CFB891}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C9A8C287-A7AE-45BD-9565-12CBB4B038AA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C9A8C287-A7AE-45BD-9565-12CBB4B038AA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C9A8C287-A7AE-45BD-9565-12CBB4B038AA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C9A8C287-A7AE-45BD-9565-12CBB4B038AA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {B7AC24B3-54C4-4ADD-A437-A7D7965E68D4}
+		SolutionGuid = {5B13940D-C6DD-41CA-9DAA-EC71353FFDA5}
 	EndGlobalSection
 EndGlobal
