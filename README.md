@@ -20,7 +20,7 @@ Install mod loader from [here](https://github.com/LavaGang/MelonLoader), install
 ## How to get binary
 
 You can clone this repo, copy `Directory.Build.props.example` to `Directory.Build.props` and edit it, set game folder(for example, `C:\Program Files\Steam\steamapps\common\Muse Dash`), open in Visual Studio and recover the project. All libraries are in `%Game Folder%\MelonLoader\Managed` after you started game with MelonLoader at least once but it should be detected automatically if you edit `Directory.Build.props` correctly.  
-After recovering project successfully, you can build it and get `MiscToolsForMD.dll`, `MiscToolsForMD.Events.dll` and `MiscToolsForMD.Libs.dll` at folder `MiscToolsForMD/bin/%BuildConfiguration%/net6.0/`. All files are needed, put `MiscToolsForMD.dll` and `MiscToolsForMD.Events.dll` at `Mods` folder and put `MiscToolsForMD.Libs.dll` at `UserLibs` folder.
+After recovering project successfully, you can build this project and get dll files. Put them in the `Mods` folder and start your game, you will find the changes.
 
 ## Known issues
 

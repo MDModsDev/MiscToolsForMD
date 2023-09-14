@@ -5,7 +5,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
-
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
     <NoWarn></NoWarn>
@@ -17,32 +16,16 @@
     <NoWarn></NoWarn>
     <WarningsNotAsErrors>TODO</WarningsNotAsErrors>
   </PropertyGroup>
-
   <ItemGroup>
-    <ProjectReference Include="..\MiscToolsForMD.Libs\MiscToolsForMD.Libs.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="0Harmony">
-      <HintPath>$(MelonLoader)\net6\0Harmony.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="Assembly-CSharp">
       <HintPath>$(MelonLoader)\Il2CppAssemblies\Assembly-CSharp.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Il2CppInterop.Runtime">
-      <HintPath>$(MelonLoader)\net6\Il2CppInterop.Runtime.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Il2Cppmscorlib">
-      <HintPath>$(MelonLoader)\Il2CppAssemblies\Il2Cppmscorlib.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
+  </ItemGroup>
+  <ItemGroup>
     <Reference Include="MelonLoader">
       <HintPath>$(MelonLoader)\net6\MelonLoader.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>
-
 </Project>

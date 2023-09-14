@@ -5,27 +5,21 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
-
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
-    <NoWarn />
+    <NoWarn></NoWarn>
+    <WarningsNotAsErrors>TODO</WarningsNotAsErrors>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
-    <NoWarn />
+    <NoWarn></NoWarn>
+    <WarningsNotAsErrors>TODO</WarningsNotAsErrors>
   </PropertyGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\MiscToolsForMD.Events\MiscToolsForMD.Events.csproj" />
-    <ProjectReference Include="..\MiscToolsForMD.Libs\MiscToolsForMD.Libs.csproj" />
-  </ItemGroup>
-
   <ItemGroup>
     <Reference Include="MelonLoader">
       <HintPath>$(MelonLoader)\net6\MelonLoader.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>
-
 </Project>
