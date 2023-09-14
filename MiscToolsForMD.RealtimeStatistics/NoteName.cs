@@ -1,3 +1,7 @@
 namespace MiscToolsForMD.Sdk;
 
-public enum NoteName { }
+/// <summary>
+/// The note name enums
+/// </summary>
+public enum NoteName
+{ }

@@ -1,5 +1,6 @@
 using MelonLoader;
 using MiscToolsForMD.SyncLyrics;
+
 [assembly: MelonInfo(typeof(SyncLyricsMod), "MiscToolsForMD.SyncLyrics", "0.1.0", "MDModsDev")]
 [assembly: MelonGame("PeroPeroGames", "MuseDash")]
 [assembly: MelonPlatformDomain(MelonPlatformDomainAttribute.CompatibleDomains.IL2CPP)]
